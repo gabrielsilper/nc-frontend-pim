@@ -28,7 +28,6 @@ interface KpiCard {
   standalone: true,
   imports: [CommonModule, SeverityBadgeComponent, StatusBadgeComponent, OverdueBadgeComponent],
   templateUrl: './dashboard.page.html',
-  host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' },
 })
 export class DashboardPage {
   private dashboardService = inject(DashboardService);

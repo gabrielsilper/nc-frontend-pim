@@ -1,4 +1,4 @@
-<div class="h-14 bg-nc-surface border-b border-nc-line px-6 flex items-center gap-6 shrink-0">
+<div class="h-14 bg-nc-surface border-b border-nc-line px-6 flex items-center gap-6 sticky top-0 z-10">
   <div class="flex-1">
     <div class="font-mono text-[10px] text-nc-muted uppercase tracking-widest mb-0.5">Dashboard</div>
     <h1 class="text-[17px] font-semibold m-0 tracking-[-0.003em]">Visão geral</h1>
@@ -17,7 +17,7 @@
   </button>
 </div>
 
-<div class="flex-1 overflow-auto p-6">
+<div class="p-6">
   <div class="grid grid-cols-4 gap-3 mb-5">
     @for (k of kpis(); track k.label) {
       <div class="relative bg-nc-surface border border-nc-line p-4 rounded-sm overflow-hidden">
