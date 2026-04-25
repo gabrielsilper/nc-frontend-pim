@@ -1,0 +1,106 @@
+<div class="flex w-full h-screen bg-nc-bg text-white font-sans">
+
+  <!-- Left brand column -->
+  <div class="flex-[1_1_55%] px-16 py-14 flex flex-col border-r border-white/10">
+
+    <!-- Logo -->
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 bg-nc-accent grid place-items-center rounded-sm font-mono text-[15px] font-extrabold text-nc-bg">NC</div>
+      <div>
+        <div class="text-base font-semibold">NC Control</div>
+        <div class="font-mono text-[10px] text-white/30 uppercase tracking-wider">Sistema de Não Conformidades</div>
+      </div>
+    </div>
+
+    <!-- Hero -->
+    <div class="flex-1 flex flex-col justify-center max-w-[520px]">
+      <div class="font-mono text-[11px] text-nc-accent uppercase tracking-[0.1em] mb-5">ISO 9001 · Polo Industrial de Manaus</div>
+      <h1 class="text-[44px] font-bold leading-[1.1] tracking-tight m-0 mb-5">
+        Controle digital de não conformidades na linha de produção.
+      </h1>
+      <p class="text-[15px] leading-relaxed text-white/50 m-0">
+        Registre desvios, atribua planos de ação e acompanhe o ciclo de tratamento com rastreabilidade completa. Do operador ao gestor, no mesmo fluxo.
+      </p>
+
+    </div>
+
+  </div>
+
+  <!-- Right form column -->
+  <div class="flex-[1_1_45%] bg-nc-panel text-nc-ink px-[72px] py-14 flex flex-col justify-center">
+    <form [formGroup]="form" (ngSubmit)="submit()" class="max-w-[380px] w-full">
+
+      <div class="font-mono text-[10px] text-nc-ink-2 uppercase tracking-widest mb-2">Acesso seguro</div>
+      <h2 class="text-[28px] font-bold m-0 mb-2 tracking-tight">Faça login com suas credenciais</h2>
+      <p class="text-[13px] text-nc-ink-3 m-0 mb-8">
+        Use o e-mail e senha fornecido pelo RH ou Gestor. Em caso de bloqueio, contate a TI ou equipe de RH.
+      </p>
+
+      <!-- Email -->
+      <label class="block mb-4">
+        <div class="font-mono text-[11px] font-semibold text-nc-ink-2 uppercase tracking-wider mb-1.5">E-mail corporativo</div>
+        <div class="relative">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-nc-ink-3 pointer-events-none">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            </svg>
+          </span>
+          <input
+            formControlName="email"
+            type="email"
+            placeholder="seu@email.com.br"
+            class="w-full pl-9 pr-3 py-2.5 bg-white border border-nc-line-strong rounded-sm text-sm outline-none focus:border-nc-ink transition-colors"
+          />
+        </div>
+        @if (form.controls.email.touched && form.controls.email.invalid) {
+          <div class="text-[11px] text-nc-critical mt-1">E-mail inválido</div>
+        }
+      </label>
+
+      <!-- Password -->
+      <label class="block mb-3">
+        <div class="flex justify-between items-center mb-1.5">
+          <span class="font-mono text-[11px] font-semibold text-nc-ink-2 uppercase tracking-wider">Senha</span>
+          <a class="text-[11px] text-nc-ink-2 underline cursor-pointer hover:text-nc-ink transition-colors">Esqueci minha senha</a>
+        </div>
+        <div class="relative">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-nc-ink-3 pointer-events-none">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </span>
+          <input
+            formControlName="password"
+            type="password"
+            class="w-full pl-9 pr-3 py-2.5 bg-white border border-nc-line-strong rounded-sm text-sm outline-none focus:border-nc-ink transition-colors"
+          />
+        </div>
+        @if (form.controls.password.touched && form.controls.password.invalid) {
+          <div class="text-[11px] text-nc-critical mt-1">Senha deve ter entre 8 e 25 caracteres</div>
+        }
+      </label>
+
+      <!-- Feedback -->
+      @if (success()) {
+        <div class="font-mono text-[11px] text-nc-success mb-5">✓ Credenciais validadas</div>
+      }
+      @if (error()) {
+        <div class="font-mono text-[11px] text-nc-critical mb-5">{{ error() }}</div>
+      }
+
+      <!-- Submit -->
+      <button
+        type="submit"
+        [disabled]="form.invalid || loading() || success()"
+        class="w-full py-3 bg-nc-ink text-white text-sm font-semibold rounded-sm flex items-center justify-center gap-2 disabled:opacity-60 transition-opacity"
+      >
+        <span class="underline underline-offset-2">{{ loading() ? 'Autenticando…' : 'Entrar no sistema' }}</span>
+        @if (!loading()) {
+          <span>→</span>
+        }
+      </button>
+
+    </form>
+  </div>
+
+</div>

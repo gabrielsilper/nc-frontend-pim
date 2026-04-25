@@ -19,9 +19,9 @@ Stack: Angular 21 · TypeScript strict · TailwindCSS · Signals
 
 ## FASE 1 — Setup e estrutura base
 
-- [ ] Criar projeto Angular com Tailwind (`ng new --style=tailwind`)
-- [ ] Configurar `tsconfig` com `strict: true`
-- [ ] Criar estrutura de pastas:
+- [x] Criar projeto Angular com Tailwind (`ng new --style=tailwind`)
+- [x] Configurar `tsconfig` com `strict: true`
+- [x] Criar estrutura de pastas:
   ```
   src/app/
     core/
@@ -37,8 +37,8 @@ Stack: Angular 21 · TypeScript strict · TailwindCSS · Signals
     shared/
       components/
   ```
-- [ ] Configurar `app.routes.ts` com lazy loading por feature
-- [ ] Configurar `app.config.ts` com `provideRouter`, `provideHttpClient` e interceptors
+- [x] Configurar `app.routes.ts` com lazy loading por feature
+- [x] Configurar `app.config.ts` com `provideRouter`, `provideHttpClient` e interceptors
 
 ---
 
@@ -46,7 +46,7 @@ Stack: Angular 21 · TypeScript strict · TailwindCSS · Signals
 
 ### Modelos
 
-- [ ] `src/app/core/models/profile.enum.ts`
+- [x] `src/app/core/models/profile.enum.ts`
   ```ts
   export enum Profile {
     OPERADOR,      // 0
@@ -55,7 +55,7 @@ Stack: Angular 21 · TypeScript strict · TailwindCSS · Signals
   }
   ```
 
-- [ ] `src/app/core/models/user.model.ts`
+- [x] `src/app/core/models/user.model.ts`
   ```ts
   import { Profile } from './profile.enum'
 
@@ -74,7 +74,7 @@ Stack: Angular 21 · TypeScript strict · TailwindCSS · Signals
   }
   ```
 
-- [ ] `src/app/core/models/auth.model.ts`
+- [x] `src/app/core/models/auth.model.ts`
   ```ts
   import { AuthUserDTO } from './user.model'
 
@@ -92,7 +92,7 @@ Stack: Angular 21 · TypeScript strict · TailwindCSS · Signals
 
 ### Service
 
-- [ ] `src/app/core/services/auth.service.ts`
+- [x] `src/app/core/services/auth.service.ts`
   - `currentUser = signal<AuthUserDTO | null>(null)`
   - `isAuthenticated = computed(() => !!currentUser())`
   - `login(data: LoginDTO): Observable<ResponseTokensDTO>` — salva `accessToken` e `refreshToken` no localStorage, atualiza signal com `response.user`
@@ -101,18 +101,18 @@ Stack: Angular 21 · TypeScript strict · TailwindCSS · Signals
 
 ### Interceptor
 
-- [ ] `src/app/core/interceptors/auth.interceptor.ts`
+- [x] `src/app/core/interceptors/auth.interceptor.ts`
   - Injeta `Authorization: Bearer <accessToken>` em todas as requisições
   - Erro 401 → chama `auth.logout()`
 
 ### Guard
 
-- [ ] `src/app/core/guards/auth.guard.ts` (`CanActivateFn`)
+- [x] `src/app/core/guards/auth.guard.ts` (`CanActivateFn`)
   - Rota sem token válido → redireciona para `/login`
 
 ### Página
 
-- [ ] `src/app/features/auth/login/login.page.ts` + `login.page.html`
+- [x] `src/app/pages/login/login.page.ts` + `login.page.html`
   - Formulário reativo com campos `email` e `password` (nomes do backend)
   - Validação em tempo real (required, email válido, mínimo 8 e máximo 25 chars no password)
   - Estado de loading: `loading = signal(false)`

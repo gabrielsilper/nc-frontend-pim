@@ -1,3 +1,23 @@
-/* You can add global styles to this file, and also import other style files */
-
 @import 'tailwindcss';
+
+@theme {
+  --color-nc-bg: #111111;
+  --color-nc-accent: #F59E0B;
+
+  --color-nc-panel: #FFFFFF;
+
+  --color-nc-ink: #111111;
+  --color-nc-ink-2: #64748B;
+  --color-nc-ink-3: #94A3B8;
+  --color-nc-muted: #475569;
+
+  --color-nc-line: #E2E8F0;
+  --color-nc-line-strong: #CBD5E1;
+
+  --color-nc-critical: #EF4444;
+  --color-nc-warning: #F59E0B;
+  --color-nc-success: #22C55E;
+
+  --font-family-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-family-mono: 'JetBrains Mono', ui-monospace, monospace;
+}

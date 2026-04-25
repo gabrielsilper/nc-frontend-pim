@@ -62,6 +62,13 @@ Nunca usar template inline.
 
 Sempre usar TailwindCSS para interface.
 
+## Estrutura de Pastas
+
+Páginas ficam em `src/app/pages/<nome-da-pagina>/` — sem subpasta de domínio antes.
+
+Correto: `pages/login/`, `pages/dashboard/`, `pages/nc-lista/`
+Errado: `features/auth/login/`, `features/ncs/list/`
+
 ## Ao gerar código novo
 
 Antes de criar qualquer arquivo, verificar padrões existentes no projeto e seguir consistência local.
