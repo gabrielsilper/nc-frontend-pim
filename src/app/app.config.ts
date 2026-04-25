@@ -11,7 +11,11 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor])),
     provideAppInitializer(() => {
-      inject(AuthService).loadUserFromToken();
+      const auth = inject(AuthService);
+      auth.loadUserFromToken();
+      if (auth.isAuthenticated()) {
+        auth.me().subscribe({ error: () => auth.logout() });
+      }
     }),
   ],
 };

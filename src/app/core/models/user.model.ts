@@ -10,4 +10,6 @@ export interface ResponseUserDTO {
 export interface AuthUserDTO {
   id: string;
   profile: Profile;
+  name?: string;
+  email?: string;
 }

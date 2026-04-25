@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { LoginDTO, ResponseTokensDTO } from '../models/auth.model';
-import { AuthUserDTO } from '../models/user.model';
+import { AuthUserDTO, ResponseUserDTO } from '../models/user.model';
 import { Profile } from '../models/profile.enum';
 
 const ACCESS_TOKEN_KEY = 'accessToken';
@@ -59,6 +59,12 @@ export class AuthService {
 
   getAccessToken(): string | null {
     return localStorage.getItem(ACCESS_TOKEN_KEY);
+  }
+
+  me() {
+    return this.http
+      .get<ResponseUserDTO>(`${environment.apiUrl}/auth/me`)
+      .pipe(tap((user) => this.currentUser.set(user)));
   }
 
   private decodeToken(token: string): JwtPayload | null {

@@ -1,1 +1,123 @@
-<p>dashboard works!</p>
+<div class="h-14 bg-nc-surface border-b border-nc-line px-6 flex items-center gap-6 shrink-0">
+  <div class="flex-1">
+    <div class="font-mono text-[10px] text-nc-muted uppercase tracking-widest mb-0.5">Dashboard</div>
+    <h1 class="text-[17px] font-semibold m-0 tracking-[-0.003em]">Visão geral</h1>
+  </div>
+  <button
+    type="button"
+    class="px-3 py-1.5 bg-nc-surface border border-nc-line text-nc-ink-2 text-xs font-medium rounded-sm hover:bg-nc-panel"
+  >
+    Exportar
+  </button>
+  <button
+    type="button"
+    class="px-3.5 py-1.5 bg-nc-accent text-white text-xs font-medium rounded-sm hover:opacity-90"
+  >
+    + Nova NC
+  </button>
+</div>
+
+<div class="flex-1 overflow-auto p-6">
+  <div class="grid grid-cols-4 gap-3 mb-5">
+    @for (k of kpis(); track k.label) {
+      <div class="relative bg-nc-surface border border-nc-line p-4 rounded-sm overflow-hidden">
+        <div class="absolute left-0 top-0 bottom-0 w-0.75" [class]="k.accentCls"></div>
+        <div class="font-mono text-[10px] text-nc-ink-3 tracking-widest mb-2.5">{{ k.label }}</div>
+        <div class="font-mono text-[38px] font-semibold tracking-[-0.04em] leading-none">{{ k.value }}</div>
+      </div>
+    }
+  </div>
+
+  <div class="grid grid-cols-[1fr_360px] gap-4">
+    <div class="bg-nc-surface border border-nc-line rounded-sm">
+      <div class="px-4.5 py-3.5 border-b border-nc-line">
+        <div class="text-sm font-semibold">NCs recentes</div>
+        <div class="font-mono text-[10px] text-nc-muted uppercase tracking-wider mt-0.5">
+          Últimas 10 · ordenado por abertura
+        </div>
+      </div>
+      <table class="w-full text-[12.5px] border-collapse">
+        <thead class="bg-nc-panel font-mono text-[10px] text-nc-ink-3 tracking-wider uppercase">
+          <tr>
+            <th class="text-left px-3.5 py-2 font-medium">Número</th>
+            <th class="text-left px-3.5 py-2 font-medium">Título</th>
+            <th class="text-left px-3.5 py-2 font-medium">Linha</th>
+            <th class="text-left px-3.5 py-2 font-medium">Grav.</th>
+            <th class="text-left px-3.5 py-2 font-medium">Status</th>
+            <th class="text-right px-3.5 py-2 font-medium">Aberta há</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (n of recent(); track n.id) {
+            <tr class="border-t border-nc-line hover:bg-nc-panel">
+              <td class="px-3.5 py-2.5 font-mono text-[11.5px]">{{ n.number }}</td>
+              <td class="px-3.5 py-2.5 max-w-[320px]">
+                <div class="truncate">{{ n.title }}</div>
+                @if (n.isOverdue) {
+                  <div class="mt-1"><nc-overdue-badge /></div>
+                }
+              </td>
+              <td class="px-3.5 py-2.5 font-mono text-[11.5px] text-nc-ink-3">{{ n.processLine }}</td>
+              <td class="px-3.5 py-2.5"><nc-severity-badge [severity]="n.severity" /></td>
+              <td class="px-3.5 py-2.5"><nc-status-badge [status]="n.status" /></td>
+              <td class="px-3.5 py-2.5 text-right font-mono text-[11.5px] text-nc-ink-3">{{ n.ageLabel }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="px-3.5 py-10 text-center text-nc-ink-3 text-[12.5px]">
+                Nenhuma NC encontrada.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="flex flex-col gap-4">
+      <div class="bg-nc-surface border border-nc-line rounded-sm">
+        <div class="px-4.5 py-3.5 border-b border-nc-line">
+          <div class="text-sm font-semibold">Recorrência por tipo</div>
+          <div class="font-mono text-[10px] text-nc-muted uppercase tracking-wider mt-0.5">Top 3</div>
+        </div>
+        <div class="py-2">
+          @for (r of ranking(); track r.type; let i = $index) {
+            <div class="px-4.5 py-3">
+              <div class="flex justify-between items-baseline mb-1.5">
+                <div class="flex gap-2.5 items-baseline">
+                  <span class="font-mono text-[11px] text-nc-muted w-4.5">
+                    {{ i + 1 | number: '2.0-0' }}
+                  </span>
+                  <span class="text-[13px] font-medium">{{ r.name }}</span>
+                </div>
+                <span class="font-mono text-[18px] font-semibold">{{ r.total }}</span>
+              </div>
+              <div class="h-1.5 bg-nc-low-soft relative">
+                <div class="absolute left-0 top-0 bottom-0 bg-nc-ink" [style.width.%]="r.barPct"></div>
+              </div>
+            </div>
+          } @empty {
+            <div class="px-4.5 py-6 text-center text-nc-ink-3 text-[12px]">Sem dados.</div>
+          }
+        </div>
+      </div>
+
+      @if (expiredCount() > 0) {
+        <div class="bg-nc-critical-soft border border-nc-critical/30 rounded-sm p-4">
+          <div class="font-mono text-[10px] text-nc-critical uppercase tracking-widest mb-1.5">
+            Atenção · {{ expiredCount() }} NCs vencidas
+          </div>
+          <p class="text-[12.5px] text-nc-ink-2 leading-snug m-0">
+            {{ expiredCount() }} não conformidades ultrapassaram o prazo de encerramento.
+            Reatribua responsáveis ou justifique a prorrogação.
+          </p>
+          <button
+            type="button"
+            class="mt-3 px-3 py-1.5 border border-nc-critical text-nc-critical text-[11.5px] font-medium rounded-sm hover:bg-nc-critical/5"
+          >
+            Revisar pendências
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</div>
