@@ -59,6 +59,11 @@ Preferir:
 - spacing limpo
 - responsividade
 
+## Ícones
+
+Sempre usar ícones do Google Material Icons
+
+
 ## Estrutura de arquivo por componente/página
 
 Todo component ou page:

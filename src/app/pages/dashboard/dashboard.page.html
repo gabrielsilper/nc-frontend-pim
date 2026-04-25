@@ -41,7 +41,6 @@
           <tr>
             <th class="text-left px-3.5 py-2 font-medium">Número</th>
             <th class="text-left px-3.5 py-2 font-medium">Título</th>
-            <th class="text-left px-3.5 py-2 font-medium">Linha</th>
             <th class="text-left px-3.5 py-2 font-medium">Grav.</th>
             <th class="text-left px-3.5 py-2 font-medium">Status</th>
             <th class="text-right px-3.5 py-2 font-medium">Aberta há</th>
@@ -57,7 +56,6 @@
                   <div class="mt-1"><nc-overdue-badge /></div>
                 }
               </td>
-              <td class="px-3.5 py-2.5 font-mono text-[11.5px] text-nc-ink-3">{{ n.processLine }}</td>
               <td class="px-3.5 py-2.5"><nc-severity-badge [severity]="n.severity" /></td>
               <td class="px-3.5 py-2.5"><nc-status-badge [status]="n.status" /></td>
               <td class="px-3.5 py-2.5 text-right font-mono text-[11.5px] text-nc-ink-3">{{ n.ageLabel }}</td>
