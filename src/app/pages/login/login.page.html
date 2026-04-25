@@ -81,9 +81,6 @@
       </label>
 
       <!-- Feedback -->
-      @if (success()) {
-        <div class="font-mono text-[11px] text-nc-success mb-5">✓ Credenciais validadas</div>
-      }
       @if (error()) {
         <div class="font-mono text-[11px] text-nc-critical mb-5">{{ error() }}</div>
       }
@@ -91,7 +88,7 @@
       <!-- Submit -->
       <button
         type="submit"
-        [disabled]="form.invalid || loading() || success()"
+        [disabled]="form.invalid || loading()"
         class="w-full py-3 bg-nc-ink text-white text-sm font-semibold rounded-sm flex items-center justify-center gap-2 disabled:opacity-60 transition-opacity"
       >
         <span class="underline underline-offset-2">{{ loading() ? 'Autenticando…' : 'Entrar no sistema' }}</span>
