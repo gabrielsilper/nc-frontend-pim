@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>NC Control — NC-2026-0213</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app-shell" id="root"></div>
+<script src="mock-data.js"></script>
+<script src="chrome.js"></script>
+<script>
+const root = document.getElementById('root');
+
+const nc = NC_MOCK.ncs[1]; // NC-2026-0213
+const opener = NCUI.userById(nc.openedBy);
+
+const stages = [
+  { key: 'ABERTA',                  label: 'Aberta',       done: true,  ts: '24/04 12:30', user: 'C. Nogueira' },
+  { key: 'EM_TRATAMENTO',           label: 'Em tratamento', done: true, active: true, ts: '24/04 12:45', user: 'R. Costa' },
+  { key: 'AGUARDANDO_VERIFICACAO',  label: 'Aguard. verif.', done: false },
+  { key: 'ENCERRADA',               label: 'Encerrada',      done: false },
+];
+
+const stepper = `
+  <div style="display:flex;gap:0;align-items:stretch;margin-bottom:2px">
+    ${stages.map((s, i) => {
+      const isLast = i === stages.length - 1;
+      const fill = s.done ? 'var(--nc-ink)' : 'var(--nc-line)';
+      return `
+        <div style="flex:1;display:flex;flex-direction:column;gap:8px;${isLast ? '' : 'padding-right:12px'}">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:22px;height:22px;border-radius:50%;background:${s.active ? 'var(--nc-accent)' : fill};color:#fff;display:grid;place-items:center;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;flex-shrink:0">
+              ${s.done && !s.active ? '✓' : (i + 1)}
+            </div>
+            ${!isLast ? `<div style="flex:1;height:2px;background:${stages[i + 1].done ? 'var(--nc-ink)' : 'var(--nc-line)'}"></div>` : ''}
+          </div>
+          <div>
+            <div style="font-size:12.5px;color:${s.done ? 'var(--nc-ink)' : 'var(--nc-ink-3)'};font-weight:${s.active ? '600' : '500'}">${s.label}</div>
+            ${s.ts ? `<div class="mono" style="font-size:10px;color:var(--nc-ink-3);letter-spacing:0.3px;margin-top:2px">${s.ts} · ${s.user}</div>` : `<div class="mono" style="font-size:10px;color:var(--nc-muted);letter-spacing:0.3px;margin-top:2px">Pendente</div>`}
+          </div>
+        </div>
+      `;
+    }).join('')}
+  </div>
+`;
+
+const actionItems = [
+  { desc: 'Recalibrar forno de refusão (zona 3) e registrar leitura da curva térmica', resp: 'u02', deadline: '26/04 18:00', status: 'EM_ANDAMENTO', ev: null },
+  { desc: 'Retrabalhar 42 placas do lote #88213 conforme IT-SMT-07', resp: 'u03', deadline: '25/04 12:00', status: 'PENDENTE', ev: null },
+  { desc: 'Inspecionar amostra de 20 placas do próximo lote antes da liberação', resp: 'u02', deadline: '25/04 16:00', status: 'CONCLUIDA', ev: 'Inspeção visual + teste ICT aprovados. Relatório REL-2026-0098 anexado.' },
+];
+
+const actionRows = actionItems.map((a, i) => `
+  <tr>
+    <td class="num">CA-${String(i + 1).padStart(2, '0')}</td>
+    <td>
+      <div style="color:var(--nc-ink);line-height:1.45">${a.desc}</div>
+      ${a.ev ? `<div class="mono" style="font-size:10.5px;color:var(--nc-ok);margin-top:4px;padding:6px 8px;background:var(--nc-ok-soft);border-radius:2px;line-height:1.5"><strong style="letter-spacing:0.4px">EVIDÊNCIA ›</strong> ${a.ev}</div>` : ''}
+    </td>
+    <td>${NCUI.assignedChip(a.resp)}</td>
+    <td class="mono" style="font-size:11.5px;color:${a.status === 'CONCLUIDA' ? 'var(--nc-ink-3)' : 'var(--nc-ink)'}">${a.deadline}</td>
+    <td>${NCUI.caStatusBadge(a.status)}</td>
+    <td class="right">
+      ${a.status !== 'CONCLUIDA' ? `<button class="btn btn--ghost btn--xs">${NCUI.icon('check', 11)}</button>` : ''}
+      <button class="btn btn--ghost btn--xs">${NCUI.icon('more', 11)}</button>
+    </td>
+  </tr>
+`).join('');
+
+const history = [
+  { ts: '24/04 14:22', user: 'R. Costa',    act: 'Atualizou prazo para 27/04 18:00' },
+  { ts: '24/04 12:50', user: 'R. Costa',    act: 'Atribuiu ação corretiva #3 a J. Pereira' },
+  { ts: '24/04 12:45', user: 'R. Costa',    act: 'Alterou status de ABERTA para EM_TRATAMENTO' },
+  { ts: '24/04 12:44', user: 'R. Costa',    act: 'Atribuiu responsável: Juliana Pereira' },
+  { ts: '24/04 12:30', user: 'C. Nogueira', act: 'Registrou não conformidade' },
+];
+
+const actions = `
+  <div style="display:flex;gap:8px;align-items:center">
+    <span class="mono nc-badge nc-badge--compact" style="background:var(--nc-line);color:var(--nc-ink-2)">${nc.num}</span>
+    <button class="btn btn--secondary btn--sm">${NCUI.icon('edit', 12)} Editar</button>
+    <button class="btn btn--danger btn--sm">Cancelar NC</button>
+    <button class="btn btn--primary btn--sm">Avançar para Aguard. verif. →</button>
+  </div>
+`;
+
+root.innerHTML = `
+  ${renderSidebar('ncs')}
+  <div class="app-main">
+    ${renderTopbar({ title: nc.title, crumbs: ['NCs', nc.num], actions })}
+    <div class="app-body">
+      <!-- Meta header -->
+      <div class="panel" style="padding:18px 22px;margin-bottom:14px">
+        <div style="display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap">
+          ${NCUI.sevBadge(nc.sev)} ${NCUI.statusBadge(nc.status)}
+          <span class="tag-pill">${nc.line}</span>
+          <span class="tag-pill">${nc.sector}</span>
+          <span class="tag-pill">Tipo: Produto</span>
+          <div style="margin-left:auto" class="mono" style="font-size:11px;color:var(--nc-ink-3);letter-spacing:0.4px">SLA ${nc.age} / 48h</div>
+        </div>
+        ${stepper}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 340px;gap:16px">
+        <!-- Main column -->
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="panel" style="padding:20px 22px">
+            <div class="mono" style="font-size:10px;color:var(--nc-muted);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:8px">Descrição do desvio</div>
+            <div style="font-size:14px;line-height:1.6;color:var(--nc-ink)">Inspeção AOI detectou solda fria em 42 placas do lote #88213, posição R47. Teste funcional em amostragem confirmou falha de continuidade. Provável desvio no perfil térmico da zona 3 do forno de refusão (pico 228 °C abaixo da referência 245 °C). Lote segregado na área 7B.</div>
+          </div>
+
+          <div class="panel" style="padding:20px 22px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <div class="mono" style="font-size:10px;color:var(--nc-muted);letter-spacing:0.6px;text-transform:uppercase">Causa raiz</div>
+              <button class="btn btn--ghost btn--xs">${NCUI.icon('edit', 11)} Editar</button>
+            </div>
+            <div style="font-size:13.5px;line-height:1.6;color:var(--nc-ink-2)">Perfil térmico fora de especificação por desgaste do termopar da zona 3, identificado via 5 Porquês. Última calibração: 14/04/2026 (10 dias).</div>
+          </div>
+
+          <!-- Action plan -->
+          <div class="panel">
+            <div class="panel__head">
+              <div>
+                <div class="panel__title">Plano de ação</div>
+                <div class="panel__sub">3 ações · 1 concluída · 1 em andamento · 1 pendente</div>
+              </div>
+              <button class="btn btn--accent btn--sm">${NCUI.icon('plus', 12)} Adicionar ação</button>
+            </div>
+            <table class="tbl">
+              <thead><tr>
+                <th>ID</th><th>Ação</th><th>Responsável</th><th>Prazo</th><th>Status</th><th class="right"></th>
+              </tr></thead>
+              <tbody>${actionRows}</tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Right column -->
+        <aside style="display:flex;flex-direction:column;gap:14px">
+          <div class="panel" style="padding:16px 18px">
+            <div class="mono" style="font-size:10px;color:var(--nc-muted);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:12px">Atribuição</div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+              <div style="width:36px;height:36px;background:#334155;color:#fff;display:grid;place-items:center;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;border-radius:2px">JP</div>
+              <div style="flex:1">
+                <div style="font-size:13px;color:var(--nc-ink);font-weight:500">Juliana Pereira</div>
+                <div class="mono" style="font-size:10px;color:var(--nc-ink-3);text-transform:uppercase;letter-spacing:0.4px">Responsável · SMT</div>
+              </div>
+              <button class="btn btn--ghost btn--xs">${NCUI.icon('edit', 11)}</button>
+            </div>
+            <div class="mono" style="font-size:11px;color:var(--nc-ink-3);line-height:1.8">
+              <div style="display:flex;justify-content:space-between"><span>Prazo NC</span><span style="color:var(--nc-ink);font-weight:600">27/04 18:00</span></div>
+              <div style="display:flex;justify-content:space-between"><span>Tempo restante</span><span style="color:var(--nc-accent);font-weight:600">51h 48m</span></div>
+              <div style="display:flex;justify-content:space-between"><span>Aberta em</span><span style="color:var(--nc-ink)">${nc.opened}</span></div>
+            </div>
+          </div>
+
+          <div class="panel" style="padding:16px 18px">
+            <div class="mono" style="font-size:10px;color:var(--nc-muted);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px">Aberta por</div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="width:30px;height:30px;background:#334155;color:#fff;display:grid;place-items:center;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;border-radius:2px">${opener.initials}</div>
+              <div>
+                <div style="font-size:13px;color:var(--nc-ink);font-weight:500">${opener.name}</div>
+                <div class="mono" style="font-size:10px;color:var(--nc-ink-3);text-transform:uppercase;letter-spacing:0.4px">${opener.role} · Linha 01</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel__head" style="padding:12px 18px">
+              <div class="panel__title" style="font-size:13px">Histórico</div>
+            </div>
+            <div style="padding:6px 4px 10px">
+              ${history.map((h, i) => `
+                <div style="display:flex;gap:10px;padding:8px 16px;position:relative">
+                  <div style="flex:0 0 auto;display:flex;flex-direction:column;align-items:center">
+                    <div style="width:8px;height:8px;background:${i === 0 ? 'var(--nc-accent)' : 'var(--nc-line-strong)'};border-radius:50%;margin-top:5px"></div>
+                    ${i < history.length - 1 ? `<div style="flex:1;width:1px;background:var(--nc-line);margin-top:2px"></div>` : ''}
+                  </div>
+                  <div style="flex:1;min-width:0;padding-bottom:6px">
+                    <div style="font-size:12.5px;color:var(--nc-ink);line-height:1.4">${h.act}</div>
+                    <div class="mono" style="font-size:10px;color:var(--nc-ink-3);letter-spacing:0.3px;margin-top:2px">${h.ts} · ${h.user}</div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+`;
+</script>
+</body>
+</html>

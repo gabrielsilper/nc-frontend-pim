@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>NC Control — Nova Não Conformidade</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app-shell" id="root"></div>
+<script src="mock-data.js"></script>
+<script src="chrome.js"></script>
+<script>
+const root = document.getElementById('root');
+
+const sevPicker = ['BAIXA', 'MEDIA', 'ALTA', 'CRITICA'].map((s, i) => `
+  <label style="display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid var(--nc-line-strong);background:${i === 2 ? '#FAFBFC' : '#fff'};border-radius:2px;cursor:pointer;flex:1">
+    <input type="radio" name="sev" ${i === 2 ? 'checked' : ''} style="accent-color:var(--nc-ink)">
+    ${NCUI.sevBadge(s, true)}
+  </label>
+`).join('');
+
+const typePicker = ['PRODUTO', 'PROCESSO', 'MATERIAL', 'SEGURANCA', 'OUTRO'].map((t, i) => {
+  const label = { PRODUTO: 'Produto', PROCESSO: 'Processo', MATERIAL: 'Material', SEGURANCA: 'Segurança', OUTRO: 'Outro' }[t];
+  return `
+    <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid ${i === 0 ? 'var(--nc-ink)' : 'var(--nc-line-strong)'};background:${i === 0 ? '#FAFBFC' : '#fff'};border-radius:2px;cursor:pointer">
+      <input type="radio" name="type" ${i === 0 ? 'checked' : ''} style="accent-color:var(--nc-ink)">
+      <span style="font-size:13px;color:var(--nc-ink);font-weight:${i === 0 ? '600' : '400'}">${label}</span>
+    </label>
+  `;
+}).join('');
+
+const actions = `
+  <div style="display:flex;gap:8px">
+    <a href="ncs-list.html" class="btn btn--ghost btn--sm">Cancelar</a>
+    <button class="btn btn--secondary btn--sm">Salvar rascunho</button>
+    <button class="btn btn--accent btn--sm">${NCUI.icon('plus', 12)} Registrar NC</button>
+  </div>
+`;
+
+root.innerHTML = `
+  ${renderSidebar('ncs')}
+  <div class="app-main">
+    ${renderTopbar({ title: 'Nova Não Conformidade', crumbs: ['NCs', 'Nova'], actions })}
+    <div class="app-body">
+      <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;max-width:1100px">
+        <!-- Form -->
+        <form class="panel" style="padding:24px 28px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--nc-line)">
+            <div>
+              <div class="mono" style="font-size:10px;color:var(--nc-muted);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:3px">Número (gerado ao salvar)</div>
+              <div class="mono" style="font-size:18px;color:var(--nc-ink);font-weight:600">NC-2026-0215</div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center">
+              <span class="mono" style="font-size:10px;color:var(--nc-ok);display:flex;align-items:center;gap:5px">
+                <span style="width:6px;height:6px;background:var(--nc-ok);border-radius:50%"></span>
+                AUTOSAVE ATIVO · rascunho 14:42
+              </span>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="field__label"><span>Título<span class="field__req">*</span></span><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--nc-muted);text-transform:none;letter-spacing:0">42 / 120</span></div>
+            <input class="input" value="Torque fora de especificação no parafuso M8" />
+            <div class="field__hint">Resumo curto e objetivo. Aparece nas listagens e notificações.</div>
+          </div>
+
+          <div class="field">
+            <div class="field__label">Descrição detalhada<span class="field__req">*</span></div>
+            <textarea class="textarea" rows="5">Durante a inspeção da carcaça do motor na estação 12, o torquímetro calibrado indicou valores entre 8,2 e 8,6 Nm, abaixo da especificação 10 ± 0,5 Nm definida no PR-103. Amostragem de 5 peças consecutivas apresentou o mesmo desvio. Linha parada às 14:18 aguardando liberação.</textarea>
+            <div class="field__hint">Descreva o que foi observado, onde, e como foi detectado. Inclua referências de especificação quando possível.</div>
+          </div>
+
+          <div class="field">
+            <div class="field__label">Gravidade<span class="field__req">*</span></div>
+            <div style="display:flex;gap:8px">${sevPicker}</div>
+          </div>
+
+          <div class="field">
+            <div class="field__label">Tipo de desvio<span class="field__req">*</span></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">${typePicker}</div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div class="field" style="margin-bottom:0">
+              <div class="field__label">Linha / Processo<span class="field__req">*</span></div>
+              <select class="select">
+                <option>Linha 03 — Montagem</option>
+                <option>Linha 01 — SMT</option><option>Linha 02 — Montagem</option>
+                <option>Linha 05 — Embalagem</option><option>Inspeção Final</option>
+              </select>
+            </div>
+            <div class="field" style="margin-bottom:0">
+              <div class="field__label">Setor<span class="field__req">*</span></div>
+              <select class="select">
+                <option>Montagem</option><option>SMT</option><option>Qualidade</option>
+                <option>Embalagem</option><option>Logística</option><option>Segurança</option>
+              </select>
+            </div>
+          </div>
+        </form>
+
+        <!-- Sidebar info -->
+        <aside style="display:flex;flex-direction:column;gap:14px">
+          <div class="panel" style="padding:16px 18px">
+            <div class="mono" style="font-size:10px;color:var(--nc-muted);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px">Quem abriu</div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+              <div style="width:34px;height:34px;background:#334155;color:#fff;display:grid;place-items:center;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;border-radius:2px">ET</div>
+              <div>
+                <div style="font-size:13px;color:var(--nc-ink);font-weight:500">Eduardo Tavares</div>
+                <div class="mono" style="font-size:10px;color:var(--nc-ink-3);text-transform:uppercase;letter-spacing:0.4px">Operador · Linha 03</div>
+              </div>
+            </div>
+            <div class="mono" style="font-size:11px;color:var(--nc-ink-3);line-height:1.6">
+              <div style="display:flex;justify-content:space-between"><span>Data</span><span style="color:var(--nc-ink)">24/04/2026 14:42</span></div>
+              <div style="display:flex;justify-content:space-between"><span>Turno</span><span style="color:var(--nc-ink)">2 (14:00–22:00)</span></div>
+              <div style="display:flex;justify-content:space-between"><span>OS Relacionada</span><span style="color:var(--nc-ink)">OS-88461</span></div>
+            </div>
+          </div>
+
+          <div class="panel" style="padding:16px 18px;border-left:3px solid var(--nc-accent)">
+            <div class="mono" style="font-size:10px;color:var(--nc-accent);letter-spacing:0.6px;text-transform:uppercase;font-weight:600;margin-bottom:8px">Lembrete</div>
+            <div style="font-size:12.5px;color:var(--nc-ink-2);line-height:1.55">
+              O status inicial será <strong>ABERTA</strong>. A atribuição de responsável e prazo ocorre na tela de detalhe logo após salvar.
+            </div>
+          </div>
+
+          <div class="panel" style="padding:16px 18px">
+            <div class="mono" style="font-size:10px;color:var(--nc-muted);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px">Anexos (opcional)</div>
+            <div style="border:1px dashed var(--nc-line-strong);padding:18px;text-align:center;border-radius:2px">
+              <div style="font-size:12px;color:var(--nc-ink-2);margin-bottom:4px">Arraste fotos ou docs aqui</div>
+              <div class="mono" style="font-size:10px;color:var(--nc-muted);text-transform:uppercase;letter-spacing:0.4px">JPG, PNG, PDF até 10 MB</div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+`;
+</script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>NC Control — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app-shell" id="root"></div>
+<script src="mock-data.js"></script>
+<script src="chrome.js"></script>
+<script>
+const root = document.getElementById('root');
+
+const kpiCards = NC_MOCK.kpis.map(k => {
+  const toneClass = { critical: 'kpi--critical', warning: 'kpi--warning', ok: 'kpi--ok', neutral: '' }[k.tone];
+  const deltaClass = { critical: 'kpi__delta--critical', warning: 'kpi__delta--warning', ok: 'kpi__delta--ok', neutral: '' }[k.tone];
+  return `
+    <div class="kpi ${toneClass}">
+      <div class="kpi__label">${k.label}</div>
+      <div class="kpi__value">${k.value}</div>
+      <div class="kpi__delta ${deltaClass}">${k.delta}</div>
+    </div>
+  `;
+}).join('');
+
+const rows = NC_MOCK.ncs.slice(0, 8).map(n => `
+  <tr>
+    <td class="num">${n.num}</td>
+    <td>
+      <div style="max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${n.title}</div>
+      ${n.overdue ? `<div style="margin-top:4px">${NCUI.overdueBadge()}</div>` : ''}
+    </td>
+    <td class="muted mono" style="font-size:11.5px">${n.line}</td>
+    <td>${NCUI.sevBadge(n.sev, true)}</td>
+    <td>${NCUI.statusBadge(n.status, true)}</td>
+    <td class="muted mono right" style="font-size:11.5px">${n.age}</td>
+  </tr>
+`).join('');
+
+const rankingRows = NC_MOCK.ranking.map((r, i) => `
+  <div style="padding:12px 18px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+      <div style="display:flex;gap:10px;align-items:baseline">
+        <span class="mono" style="font-size:11px;color:var(--nc-muted);width:18px">${String(i + 1).padStart(2, '0')}</span>
+        <span style="font-size:13px;color:var(--nc-ink);font-weight:500">${r.type}</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:baseline">
+        <span class="mono" style="font-size:10px;color:${r.delta.startsWith('+') ? 'var(--nc-critical)' : 'var(--nc-ok)'}">${r.delta}</span>
+        <span class="mono" style="font-size:18px;color:var(--nc-ink);font-weight:600">${r.count}</span>
+      </div>
+    </div>
+    <div style="height:6px;background:#F1F5F9;position:relative">
+      <div style="position:absolute;left:0;top:0;bottom:0;width:${r.bar}%;background:var(--nc-ink)"></div>
+    </div>
+  </div>
+`).join('');
+
+const actions = `
+  <div style="display:flex;gap:8px;align-items:center">
+    <div class="mono" style="font-size:11px;color:var(--nc-ink-3);letter-spacing:0.4px">
+      TURNO <span style="color:var(--nc-ink)">2/3</span> · 24/04/2026 · 14:42
+    </div>
+    <div style="width:1px;height:20px;background:var(--nc-line);margin:0 8px"></div>
+    <button class="btn btn--secondary btn--sm">${NCUI.icon('download', 12)} Exportar</button>
+    <a href="nc-nova.html" class="btn btn--accent btn--sm">${NCUI.icon('plus', 12)} Nova NC</a>
+  </div>
+`;
+
+root.innerHTML = `
+  ${renderSidebar('dashboard')}
+  <div class="app-main">
+    ${renderTopbar({ title: 'Visão geral — Qualidade', crumbs: ['Dashboard'], actions })}
+    <div class="app-body">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+        ${kpiCards}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 360px;gap:16px">
+        <div class="panel">
+          <div class="panel__head">
+            <div>
+              <div class="panel__title">NCs recentes</div>
+              <div class="panel__sub">Últimas 10 · ordenado por abertura</div>
+            </div>
+            <a href="ncs-list.html" style="font-size:12px;color:var(--nc-ink-2);text-decoration:underline">Ver todas →</a>
+          </div>
+          <table class="tbl">
+            <thead><tr>
+              <th>Número</th><th>Título</th><th>Linha</th><th>Grav.</th><th>Status</th><th class="right">Aberta há</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="panel">
+            <div class="panel__head"><div>
+              <div class="panel__title">Recorrência por tipo</div>
+              <div class="panel__sub">Abril 2026 · top 3</div>
+            </div></div>
+            <div style="padding:8px 0">${rankingRows}</div>
+          </div>
+
+          <div class="panel" style="border-left:3px solid var(--nc-critical);padding:14px 18px">
+            <div class="mono" style="font-size:10px;color:var(--nc-critical);letter-spacing:0.6px;text-transform:uppercase;font-weight:600;margin-bottom:6px">Atenção · 5 NCs vencidas</div>
+            <div style="font-size:12.5px;color:var(--nc-ink-2);line-height:1.5;margin-bottom:10px">
+              Cinco não conformidades ultrapassaram o prazo de encerramento. Reatribua responsáveis ou justifique a prorrogação.
+            </div>
+            <button class="btn btn--danger btn--sm">Revisar pendências</button>
+          </div>
+
+          <div class="panel" style="padding:14px 18px">
+            <div class="mono" style="font-size:10px;color:var(--nc-ink-3);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px">Tempo médio de tratamento</div>
+            <div style="display:flex;align-items:baseline;gap:8px">
+              <div class="mono" style="font-size:30px;font-weight:600;color:var(--nc-ink);letter-spacing:-0.8px">4,2</div>
+              <div style="font-size:13px;color:var(--nc-ink-3)">dias por NC</div>
+            </div>
+            <div class="mono" style="font-size:10px;color:var(--nc-ok);margin-top:4px">-0,8 d vs. março</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+`;
+</script>
+</body>
+</html>

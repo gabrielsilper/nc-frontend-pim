@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>NC Control — Índice de telas</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --nc-bg: #0F1419; --nc-panel: #F6F7F8; --nc-ink: #0F1419;
+    --nc-ink-2: #3D4852; --nc-ink-3: #6B7480; --nc-muted: #9AA3AE;
+    --nc-line: #E4E7EB; --nc-line-strong: #C9CFD6; --nc-accent: #D97706;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Inter', sans-serif; background: var(--nc-panel); color: var(--nc-ink); -webkit-font-smoothing: antialiased; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 48px 32px; }
+  .hdr { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; gap: 48px; }
+  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .brand__logo { width: 32px; height: 32px; background: var(--nc-accent); color: #0F1419; display: grid; place-items: center; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 800; border-radius: 2px; }
+  h1 { font-size: 34px; font-weight: 600; letter-spacing: -0.6px; margin: 0 0 10px; }
+  .sub { font-size: 14px; color: var(--nc-ink-3); line-height: 1.6; max-width: 680px; margin: 0; }
+  .eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--nc-accent); letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 12px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 32px; }
+  .grid--2 { grid-template-columns: repeat(2, 1fr); }
+  .card { background: #fff; border: 1px solid var(--nc-line); border-radius: 2px; text-decoration: none; color: inherit; display: flex; flex-direction: column; overflow: hidden; transition: border-color 0.15s, transform 0.15s; }
+  .card:hover { border-color: var(--nc-ink); transform: translateY(-1px); }
+  .card__preview { aspect-ratio: 16 / 10; background: var(--nc-panel); border-bottom: 1px solid var(--nc-line); overflow: hidden; position: relative; }
+  .card__preview iframe { width: 1440px; height: 900px; border: 0; transform-origin: 0 0; transform: scale(0.29); pointer-events: none; }
+  .card__body { padding: 16px 18px; }
+  .card__num { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--nc-muted); letter-spacing: 0.6px; text-transform: uppercase; margin-bottom: 6px; }
+  .card__title { font-size: 15px; font-weight: 600; margin: 0 0 4px; }
+  .card__route { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--nc-ink-3); margin-bottom: 8px; }
+  .card__desc { font-size: 12.5px; color: var(--nc-ink-3); line-height: 1.5; }
+  .section-title { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--nc-muted); letter-spacing: 0.8px; text-transform: uppercase; margin: 32px 0 14px; padding-bottom: 10px; border-bottom: 1px solid var(--nc-line); }
+  .stack-info { background: #fff; border: 1px solid var(--nc-line); border-left: 3px solid var(--nc-accent); border-radius: 2px; padding: 18px 22px; }
+  .stack-info h3 { margin: 0 0 8px; font-size: 13px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; text-transform: uppercase; }
+  .stack-info p { margin: 0 0 6px; font-size: 13px; color: var(--nc-ink-2); line-height: 1.55; }
+  .tech-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .tech { display: inline-block; padding: 3px 9px; background: var(--nc-panel); border: 1px solid var(--nc-line); font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.3px; color: var(--nc-ink-2); border-radius: 2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <div>
+      <div class="brand">
+        <div class="brand__logo">NC</div>
+        <div class="mono" style="font-size:11px;color:var(--nc-muted);letter-spacing:0.6px;text-transform:uppercase">nc control · v1.0</div>
+      </div>
+      <div class="eyebrow">ISO 9001 · Polo Industrial de Manaus</div>
+      <h1>Sistema de Registro de Não Conformidades</h1>
+      <p class="sub">Telas de alta fidelidade para uma planta industrial. Design denso e técnico, inspirado na rotina de controle de qualidade: dados numéricos visíveis, códigos em monoespaçado, cantos retos, paleta neutra com acentos âmbar/vermelho para urgência. Baseado no <span class="mono" style="font-size:12px;color:var(--nc-ink)">nc-control-backend</span> (entidades, enums e regras).</p>
+    </div>
+    <div class="stack-info" style="flex: 0 0 300px">
+      <h3>Stack</h3>
+      <p>Angular 21 standalone + signals, Tailwind CSS, Node 22 + Express, PostgreSQL — compatível com o backend TypeORM já existente.</p>
+      <div class="tech-row">
+        <span class="tech">Angular 21</span>
+        <span class="tech">Signals</span>
+        <span class="tech">Tailwind</span>
+        <span class="tech">JWT</span>
+        <span class="tech">Inter + JetBrains Mono</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Entrada</div>
+  <div class="grid grid--2">
+    <a class="card" href="login.html" target="_blank">
+      <div class="card__preview"><iframe src="login.html"></iframe></div>
+      <div class="card__body">
+        <div class="card__num">01 · LOGIN</div>
+        <h3 class="card__title">Autenticação</h3>
+        <div class="card__route">/login</div>
+        <p class="card__desc">Formulário reativo com e-mail e senha, validação em tempo real e feedback visual. Layout split com contexto da planta e métricas institucionais.</p>
+      </div>
+    </a>
+    <a class="card" href="dashboard.html" target="_blank">
+      <div class="card__preview"><iframe src="dashboard.html"></iframe></div>
+      <div class="card__body">
+        <div class="card__num">02 · DASHBOARD</div>
+        <h3 class="card__title">Visão geral — Qualidade</h3>
+        <div class="card__route">/app/dashboard</div>
+        <p class="card__desc">Quatro KPIs (abertas, críticas, prazo vencido, encerradas), ranking de recorrência top 3, lista das NCs recentes e alertas de ação.</p>
+      </div>
+    </a>
+  </div>
+
+  <div class="section-title">Fluxo de não conformidade</div>
+  <div class="grid">
+    <a class="card" href="ncs-list.html" target="_blank">
+      <div class="card__preview"><iframe src="ncs-list.html"></iframe></div>
+      <div class="card__body">
+        <div class="card__num">03 · LISTA</div>
+        <h3 class="card__title">Não Conformidades</h3>
+        <div class="card__route">/app/ncs</div>
+        <p class="card__desc">Busca por número/título, filtros combinados (status + gravidade + tipo + linha), badges coloridos e destaque para prazo vencido.</p>
+      </div>
+    </a>
+    <a class="card" href="nc-nova.html" target="_blank">
+      <div class="card__preview"><iframe src="nc-nova.html"></iframe></div>
+      <div class="card__body">
+        <div class="card__num">04 · NOVA</div>
+        <h3 class="card__title">Registrar NC</h3>
+        <div class="card__route">/app/ncs/nova</div>
+        <p class="card__desc">Formulário reativo com título, descrição, gravidade (picker), tipo, linha e setor. Número gerado no backend; canDeactivate protege saída.</p>
+      </div>
+    </a>
+    <a class="card" href="nc-detalhe.html" target="_blank">
+      <div class="card__preview"><iframe src="nc-detalhe.html"></iframe></div>
+      <div class="card__body">
+        <div class="card__num">05 · DETALHE</div>
+        <h3 class="card__title">Detalhe + Plano de Ação</h3>
+        <div class="card__route">/app/ncs/:id</div>
+        <p class="card__desc">Stepper do ciclo, descrição, causa raiz, tabela de ações corretivas com evidências, atribuição lateral e histórico cronológico.</p>
+      </div>
+    </a>
+  </div>
+
+  <div class="section-title">Operação</div>
+  <div class="grid">
+    <a class="card" href="minha-fila.html" target="_blank">
+      <div class="card__preview"><iframe src="minha-fila.html"></iframe></div>
+      <div class="card__body">
+        <div class="card__num">06 · FILA</div>
+        <h3 class="card__title">Minha fila</h3>
+        <div class="card__route">/app/minha-fila</div>
+        <p class="card__desc">Apenas NCs atribuídas ao usuário logado, ordenadas por prazo, com vencidas destacadas no topo e ações rápidas por status.</p>
+      </div>
+    </a>
+    <a class="card" href="plano-acao.html" target="_blank">
+      <div class="card__preview"><iframe src="plano-acao.html"></iframe></div>
+      <div class="card__body">
+        <div class="card__num">07 · AÇÕES</div>
+        <h3 class="card__title">Plano de ação — consolidado</h3>
+        <div class="card__route">/app/acoes</div>
+        <p class="card__desc">Kanban de ações corretivas por status (Pendente / Em andamento / Concluída) com métricas agregadas e destaque para vencidas.</p>
+      </div>
+    </a>
+    <a class="card" href="recorrencia.html" target="_blank">
+      <div class="card__preview"><iframe src="recorrencia.html"></iframe></div>
+      <div class="card__body">
+        <div class="card__num">08 · RECORRÊNCIA</div>
+        <h3 class="card__title">Relatório de recorrência</h3>
+        <div class="card__route">/app/relatorios/recorrencia</div>
+        <p class="card__desc">Volume de NCs nos últimos 12 meses, heatmap de tipo × linha e top 3 focos de atenção com variação vs. período anterior.</p>
+      </div>
+    </a>
+  </div>
+
+  <div class="section-title">Código Angular 21</div>
+  <div class="stack-info" style="border-left-color: var(--nc-ink)">
+    <h3 style="color:var(--nc-ink)">Arquivos prontos para o frontend</h3>
+    <p>Standalone components, Signals, control flow moderno (<span class="mono">@if</span>/<span class="mono">@for</span>), classes utilitárias alinhadas ao design acima. Organizados em <span class="mono">frontend/src/app/</span>.</p>
+    <div style="margin-top:14px;display:grid;grid-template-columns:repeat(2,1fr);gap:8px 20px">
+      <div class="mono" style="font-size:11.5px;color:var(--nc-ink-2)">→ core/auth.service.ts</div>
+      <div class="mono" style="font-size:11.5px;color:var(--nc-ink-2)">→ core/auth.guard.ts + interceptor</div>
+      <div class="mono" style="font-size:11.5px;color:var(--nc-ink-2)">→ core/nc.service.ts</div>
+      <div class="mono" style="font-size:11.5px;color:var(--nc-ink-2)">→ shared/models/*.ts (enums + DTOs)</div>
+      <div class="mono" style="font-size:11.5px;color:var(--nc-ink-2)">→ features/login</div>
+      <div class="mono" style="font-size:11.5px;color:var(--nc-ink-2)">→ features/dashboard</div>
+      <div class="mono" style="font-size:11.5px;color:var(--nc-ink-2)">→ features/ncs (list, nova, detalhe)</div>
+      <div class="mono" style="font-size:11.5px;color:var(--nc-ink-2)">→ features/minha-fila</div>
+      <div class="mono" style="font-size:11.5px;color:var(--nc-ink-2)">→ features/acoes</div>
+      <div class="mono" style="font-size:11.5px;color:var(--nc-ink-2)">→ features/recorrencia</div>
+      <div class="mono" style="font-size:11.5px;color:var(--nc-ink-2)">→ app.routes.ts</div>
+      <div class="mono" style="font-size:11.5px;color:var(--nc-ink-2)">→ tailwind.config.js</div>
+    </div>
+  </div>
+
+  <div style="margin-top:40px;padding-top:20px;border-top:1px solid var(--nc-line);display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--nc-muted);letter-spacing:0.4px;text-transform:uppercase">
+    <span>NC Control · v1.0 · Planta PIM Manaus II</span>
+    <span>8 telas · build 2026.04.24</span>
+  </div>
+</div>
+</body>
+</html>

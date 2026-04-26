@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>NC Control — Minha Fila</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app-shell" id="root"></div>
+<script src="mock-data.js"></script>
+<script src="chrome.js"></script>
+<script>
+const root = document.getElementById('root');
+
+// Items assigned to current user (u01) — mix overdue/urgent
+const queue = [
+  { num: 'NC-2026-0212', title: 'Embalagem com código de lote ilegível', sev: 'MEDIA', line: 'Linha 07', sector: 'Embalagem', deadline: '23/04 18:00', remaining: '-20h', overdue: true,  status: 'EM_TRATAMENTO' },
+  { num: 'NC-2026-0206', title: 'Etiqueta de rastreabilidade ausente em pallet', sev: 'MEDIA', line: 'Expedição', sector: 'Logística', deadline: '24/04 08:00', remaining: '-6h', overdue: true, status: 'ABERTA' },
+  { num: 'NC-2026-0213', title: 'Solda fria em placa PCB lote #88213', sev: 'ALTA', line: 'Linha 01', sector: 'SMT', deadline: '27/04 18:00', remaining: '51h 48m', overdue: false, status: 'EM_TRATAMENTO' },
+  { num: 'NC-2026-0211', title: 'Bancada de inspeção sem calibração válida', sev: 'ALTA', line: 'Insp. Final', sector: 'Qualidade', deadline: '28/04 12:00', remaining: '3d 22h', overdue: false, status: 'AGUARDANDO_VERIFICACAO' },
+  { num: 'NC-2026-0209', title: 'Rota de fuga da Linha 02 obstruída por pallets', sev: 'CRITICA', line: 'Linha 02', sector: 'Segurança', deadline: '30/04 18:00', remaining: '5d 4h', overdue: false, status: 'AGUARDANDO_VERIFICACAO' },
+  { num: 'NC-2026-0210', title: 'Material incorreto entregue ao estoque — peça X44', sev: 'MEDIA', line: 'Recebimento', sector: 'Logística', deadline: '02/05 14:00', remaining: '7d 23h', overdue: false, status: 'EM_TRATAMENTO' },
+];
+
+const cards = queue.map(q => `
+  <a href="nc-detalhe.html" class="panel" style="display:block;padding:16px 18px;text-decoration:none;color:inherit;${q.overdue ? 'border-left:3px solid var(--nc-critical)' : ''}">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px">
+      <div style="min-width:0;flex:1">
+        <div class="mono" style="font-size:11px;color:var(--nc-ink-3);letter-spacing:0.4px;margin-bottom:4px">${q.num}</div>
+        <div style="font-size:14.5px;color:var(--nc-ink);font-weight:500;line-height:1.35">${q.title}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        ${NCUI.sevBadge(q.sev, true)}
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+      <span class="tag-pill">${q.line}</span>
+      <span class="tag-pill">${q.sector}</span>
+      ${NCUI.statusBadge(q.status, true)}
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid var(--nc-line)">
+      <div>
+        <div class="mono" style="font-size:10px;color:var(--nc-muted);letter-spacing:0.4px;text-transform:uppercase">Prazo</div>
+        <div class="mono" style="font-size:13px;color:${q.overdue ? 'var(--nc-critical)' : 'var(--nc-ink)'};font-weight:600;margin-top:2px">${q.deadline} <span style="font-weight:400;color:${q.overdue ? 'var(--nc-critical)' : 'var(--nc-ink-3)'}">(${q.remaining})</span></div>
+      </div>
+      <div style="display:flex;gap:6px">
+        ${q.status === 'EM_TRATAMENTO' ? `<button class="btn btn--primary btn--xs">Marcar verif. →</button>` : ''}
+        ${q.status === 'ABERTA' ? `<button class="btn btn--primary btn--xs">Iniciar tratamento →</button>` : ''}
+        ${q.status === 'AGUARDANDO_VERIFICACAO' ? `<button class="btn btn--accent btn--xs">Encerrar →</button>` : ''}
+      </div>
+    </div>
+  </a>
+`).join('');
+
+const actions = `
+  <div class="mono" style="font-size:11px;color:var(--nc-ink-3);letter-spacing:0.4px">
+    ${queue.length} NCs atribuídas · <span style="color:var(--nc-critical);font-weight:600">2 vencidas</span>
+  </div>
+`;
+
+root.innerHTML = `
+  ${renderSidebar('fila')}
+  <div class="app-main">
+    ${renderTopbar({ title: 'Minha fila', crumbs: ['Fila'], actions })}
+    <div class="app-body">
+      <div class="panel" style="padding:14px 18px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:13px;color:var(--nc-ink);font-weight:500">Você é responsável por ${queue.length} não conformidades</div>
+          <div style="font-size:12px;color:var(--nc-ink-3);margin-top:2px">Ordenadas por prazo mais próximo. Itens vencidos sempre no topo.</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn--secondary btn--xs">Todas</button>
+          <button class="btn btn--primary btn--xs">Ativas (${queue.length})</button>
+          <button class="btn btn--secondary btn--xs">Concluídas</button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px">${cards}</div>
+    </div>
+  </div>
+`;
+</script>
+</body>
+</html>

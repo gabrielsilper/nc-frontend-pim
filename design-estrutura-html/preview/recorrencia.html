@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>NC Control — Relatório de Recorrência</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app-shell" id="root"></div>
+<script src="mock-data.js"></script>
+<script src="chrome.js"></script>
+<script>
+const root = document.getElementById('root');
+
+const matrix = [
+  { type: 'Produto',   L01: 8,  L02: 4, L03: 9,  L05: 3, L07: 5,  Insp: 3, Exp: 2, total: 34, delta: '+23%' },
+  { type: 'Processo',  L01: 6,  L02: 5, L03: 4,  L05: 2, L07: 3,  Insp: 4, Exp: 2, total: 26, delta: '+8%'  },
+  { type: 'Material',  L01: 3,  L02: 2, L03: 2,  L05: 3, L07: 1,  Insp: 2, Exp: 5, total: 18, delta: '-14%' },
+  { type: 'Segurança', L01: 1,  L02: 5, L03: 2,  L05: 1, L07: 1,  Insp: 0, Exp: 2, total: 12, delta: '+50%' },
+  { type: 'Outro',     L01: 1,  L02: 0, L03: 1,  L05: 0, L07: 1,  Insp: 1, Exp: 1, total: 5,  delta: '-20%' },
+];
+
+function heat(n, max) {
+  if (n === 0) return '#fff';
+  const alpha = Math.min(0.85, 0.1 + (n / max) * 0.75);
+  return `rgba(185, 28, 28, ${alpha})`;
+}
+
+const maxCell = Math.max(...matrix.flatMap(r => [r.L01, r.L02, r.L03, r.L05, r.L07, r.Insp, r.Exp]));
+
+const cols = ['L01', 'L02', 'L03', 'L05', 'L07', 'Insp', 'Exp'];
+const colLabels = { L01: 'Linha 01', L02: 'Linha 02', L03: 'Linha 03', L05: 'Linha 05', L07: 'Linha 07', Insp: 'Insp. Final', Exp: 'Expedição' };
+
+const matrixRows = matrix.map(r => `
+  <tr>
+    <td style="font-weight:500">${r.type}</td>
+    ${cols.map(c => `
+      <td style="background:${heat(r[c], maxCell)};color:${r[c] > maxCell * 0.5 ? '#fff' : 'var(--nc-ink)'};text-align:center;font-family:'JetBrains Mono',monospace;font-weight:600;font-size:13px">
+        ${r[c] || ''}
+      </td>
+    `).join('')}
+    <td class="mono right" style="font-weight:700;font-size:13.5px;color:var(--nc-ink)">${r.total}</td>
+    <td class="mono right" style="color:${r.delta.startsWith('+') ? 'var(--nc-critical)' : 'var(--nc-ok)'};font-weight:600">${r.delta}</td>
+  </tr>
+`).join('');
+
+const trendData = [28, 34, 31, 29, 42, 38, 45, 51, 44, 48, 56, 95]; // 12 months
+const trendMax = Math.max(...trendData);
+const trendBars = trendData.map((v, i) => {
+  const isCurrent = i === trendData.length - 1;
+  return `
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div style="width:100%;height:160px;display:flex;align-items:flex-end">
+        <div style="width:100%;height:${(v / trendMax) * 100}%;background:${isCurrent ? 'var(--nc-accent)' : '#334155'};transition:height 0.3s"></div>
+      </div>
+      <div class="mono" style="font-size:10px;color:${isCurrent ? 'var(--nc-accent)' : 'var(--nc-ink-3)'};font-weight:${isCurrent ? '700' : '400'}">${v}</div>
+      <div class="mono" style="font-size:9.5px;color:var(--nc-muted);letter-spacing:0.4px;text-transform:uppercase">${['Mai','Jun','Jul','Ago','Set','Out','Nov','Dez','Jan','Fev','Mar','Abr'][i]}</div>
+    </div>
+  `;
+}).join('');
+
+const topDrivers = [
+  { label: 'Linha 03 · Produto', count: 9,  delta: '+125%', insight: 'Pico concentrado em parafusos M8 fora de torque (3 últimos dias)' },
+  { label: 'Linha 02 · Segurança', count: 5, delta: '+400%', insight: 'Rotas de fuga — plano de ação em curso com Facilities' },
+  { label: 'Expedição · Material', count: 5, delta: '+67%',  insight: 'Divergência entre etiqueta e nota fiscal; revisar integração WMS' },
+];
+
+const actions = `
+  <div style="display:flex;gap:8px;align-items:center">
+    <select class="select" style="width:160px;padding:6px 10px;font-size:12px">
+      <option>Abril 2026</option><option>Março 2026</option><option>Últimos 30 dias</option><option>Últimos 90 dias</option>
+    </select>
+    <select class="select" style="width:140px;padding:6px 10px;font-size:12px">
+      <option>Todos setores</option><option>Produção</option><option>Qualidade</option><option>Logística</option>
+    </select>
+    <button class="btn btn--secondary btn--sm">${NCUI.icon('download', 12)} Exportar</button>
+  </div>
+`;
+
+root.innerHTML = `
+  ${renderSidebar('recorr')}
+  <div class="app-main">
+    ${renderTopbar({ title: 'Relatório de recorrência', crumbs: ['Relatórios', 'Recorrência'], actions })}
+    <div class="app-body">
+      <!-- Trend -->
+      <div class="panel" style="padding:20px 22px;margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px">
+          <div>
+            <div class="panel__title">Volume de NCs — 12 meses</div>
+            <div class="panel__sub">Abril em curso · previsão 95</div>
+          </div>
+          <div style="display:flex;gap:24px">
+            <div>
+              <div class="mono" style="font-size:10px;color:var(--nc-muted);letter-spacing:0.6px;text-transform:uppercase">Mês atual</div>
+              <div style="display:flex;align-items:baseline;gap:6px;margin-top:2px"><span class="mono" style="font-size:24px;font-weight:600">95</span><span class="mono" style="font-size:11px;color:var(--nc-critical)">+70% vs. mar</span></div>
+            </div>
+            <div>
+              <div class="mono" style="font-size:10px;color:var(--nc-muted);letter-spacing:0.6px;text-transform:uppercase">Média 12m</div>
+              <div style="display:flex;align-items:baseline;gap:6px;margin-top:2px"><span class="mono" style="font-size:24px;font-weight:600">41,8</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-end;height:180px;padding:0 4px">${trendBars}</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 360px;gap:14px">
+        <!-- Heatmap -->
+        <div class="panel">
+          <div class="panel__head">
+            <div>
+              <div class="panel__title">Recorrência por tipo × linha</div>
+              <div class="panel__sub">Abril 2026 · contagem de NCs</div>
+            </div>
+            <div class="mono" style="font-size:10px;color:var(--nc-muted);letter-spacing:0.4px">intensidade = frequência</div>
+          </div>
+          <table class="tbl">
+            <thead><tr>
+              <th>Tipo</th>
+              ${cols.map(c => `<th style="text-align:center">${colLabels[c]}</th>`).join('')}
+              <th class="right">Total</th>
+              <th class="right">Δ mês ant.</th>
+            </tr></thead>
+            <tbody>${matrixRows}</tbody>
+            <tfoot>
+              <tr style="background:#FAFBFC;font-family:'JetBrains Mono',monospace;font-weight:600">
+                <td style="padding:10px 14px;color:var(--nc-ink-3);font-size:10px;letter-spacing:0.6px;text-transform:uppercase">Total linha</td>
+                ${cols.map(c => {
+                  const t = matrix.reduce((a, r) => a + (r[c] || 0), 0);
+                  return `<td style="text-align:center;padding:10px 14px;font-size:13px;color:var(--nc-ink)">${t}</td>`;
+                }).join('')}
+                <td class="right" style="padding:10px 14px;font-size:14px;color:var(--nc-ink)">95</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- Top drivers -->
+        <div class="panel">
+          <div class="panel__head"><div>
+            <div class="panel__title">Principais focos de atenção</div>
+            <div class="panel__sub">Onde concentrar esforços</div>
+          </div></div>
+          <div>
+            ${topDrivers.map((t, i) => `
+              <div style="padding:14px 18px;${i < topDrivers.length - 1 ? 'border-bottom:1px solid var(--nc-line)' : ''}">
+                <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+                  <div style="font-size:13px;color:var(--nc-ink);font-weight:500">${t.label}</div>
+                  <div style="display:flex;gap:8px;align-items:baseline">
+                    <span class="mono" style="font-size:11px;color:var(--nc-critical);font-weight:600">${t.delta}</span>
+                    <span class="mono" style="font-size:17px;color:var(--nc-ink);font-weight:600">${t.count}</span>
+                  </div>
+                </div>
+                <div style="font-size:12px;color:var(--nc-ink-3);line-height:1.5">${t.insight}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+`;
+</script>
+</body>
+</html>
