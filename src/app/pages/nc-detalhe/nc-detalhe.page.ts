@@ -5,6 +5,7 @@ import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { NonConformityService } from '../../core/services/non-conformity.service';
+import { UserService } from '../../core/services/user.service';
 import {
   CreateCorrectiveActionDTO,
   ResponseCorrectiveActionDTO,
@@ -13,6 +14,7 @@ import {
   StatusCa,
 } from '../../core/models/non-conformity.model';
 import { Profile, PROFILE_LABEL } from '../../core/models/profile.enum';
+import { ResponseUserDTO } from '../../core/models/user.model';
 import { SeverityNc, SEVERITY_LABEL } from '../../core/models/severity-nc.enum';
 import { allowedStatusTransitions, StatusNc, STATUS_LABEL } from '../../core/models/status-nc.enum';
 import { TypeNc, TYPE_LABEL } from '../../core/models/type-nc.enum';
@@ -43,19 +45,28 @@ const TIMELINE_STEPS: StatusNc[] = [
 })
 export class NcDetalhePage {
   private svc = inject(NonConformityService);
+  private userSvc = inject(UserService);
   private route = inject(ActivatedRoute);
   private auth = inject(AuthService);
   private fb = inject(FormBuilder).nonNullable;
 
   nc = signal<ResponseNonConformityDTO | null>(null);
   actions = signal<ResponseCorrectiveActionDTO[]>([]);
+  creator = signal<ResponseUserDTO | null>(null);
+  assignee = signal<ResponseUserDTO | null>(null);
+
   showEdit = signal(false);
   showActionForm = signal(false);
+  showAssignForm = signal(false);
   loading = signal(false);
   savingRootCause = signal(false);
   savingDueDate = signal(false);
+  assignLoading = signal(false);
   transitionError = signal('');
   editError = signal('');
+
+  users = signal<ResponseUserDTO[]>([]);
+  selectedUserId = '';
 
   rootCause = '';
   dueDateLocal = '';
@@ -143,6 +154,12 @@ export class NcDetalhePage {
         this.nc.set(n);
         this.rootCause = n.rootCause ?? '';
         this.dueDateLocal = n.dueDate ? n.dueDate.slice(0, 10) : '';
+
+        this.userSvc.byId(n.createdById).subscribe((u) => this.creator.set(u));
+
+        if (n.assignedToId) {
+          this.userSvc.byId(n.assignedToId).subscribe((u) => this.assignee.set(u));
+        }
       });
       this.svc.correctiveActions(id).subscribe((a) => this.actions.set(a));
     }
@@ -247,6 +264,38 @@ export class NcDetalhePage {
         const msg = e.error?.message ?? 'Erro ao atualizar status.';
         this.transitionError.set(msg);
       },
+    });
+  }
+
+  openAssign() {
+    this.selectedUserId = this.assignee()?.id ?? '';
+    this.userSvc.listAll().subscribe((list) => {
+      this.users.set(list);
+      this.showAssignForm.set(true);
+    });
+  }
+
+  closeAssign() {
+    this.showAssignForm.set(false);
+    this.selectedUserId = '';
+  }
+
+  confirmAssign() {
+    const n = this.nc();
+    if (!n || !this.selectedUserId) return;
+
+    this.assignLoading.set(true);
+    this.svc.assign(n.id, this.selectedUserId).subscribe({
+      next: (updated) => {
+        this.nc.set(updated);
+        this.userSvc.byId(this.selectedUserId).subscribe((u) => {
+          this.assignee.set(u);
+          this.assignLoading.set(false);
+          this.showAssignForm.set(false);
+          this.selectedUserId = '';
+        });
+      },
+      error: () => this.assignLoading.set(false),
     });
   }
 

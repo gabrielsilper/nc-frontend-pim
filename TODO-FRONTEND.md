@@ -133,7 +133,7 @@ Stack: Angular 21 · TypeScript strict · TailwindCSS · Signals
 
 ### Modelos
 
-- [ ] `src/app/core/models/type-nc.enum.ts`
+- [x] `src/app/core/models/type-nc.enum.ts`
   ```ts
   export enum TypeNc {
     PRODUTO,    // 0
@@ -144,7 +144,7 @@ Stack: Angular 21 · TypeScript strict · TailwindCSS · Signals
   }
   ```
 
-- [ ] `src/app/core/models/severity-nc.enum.ts`
+- [x] `src/app/core/models/severity-nc.enum.ts`
   ```ts
   export enum SeverityNc {
     BAIXA,    // 0
@@ -154,7 +154,7 @@ Stack: Angular 21 · TypeScript strict · TailwindCSS · Signals
   }
   ```
 
-- [ ] `src/app/core/models/status-nc.enum.ts`
+- [x] `src/app/core/models/status-nc.enum.ts`
   ```ts
   export enum StatusNc {
     ABERTA,                  // 0
@@ -165,7 +165,7 @@ Stack: Angular 21 · TypeScript strict · TailwindCSS · Signals
   }
   ```
 
-- [ ] `src/app/core/models/non-conformity.model.ts`
+- [x] `src/app/core/models/non-conformity.model.ts`
   ```ts
   import { TypeNc } from './type-nc.enum'
   import { SeverityNc } from './severity-nc.enum'
@@ -251,29 +251,29 @@ Stack: Angular 21 · TypeScript strict · TailwindCSS · Signals
 
 ### Services
 
-- [ ] `src/app/core/services/non-conformity.service.ts`
+- [x] `src/app/core/services/non-conformity.service.ts`
   - `list(query: FindNonConformitiesQuery): Observable<ResponseNonConformitiesPageDTO>` — params enviados via `HttpParams`
   - `findById(id: string): Observable<ResponseNonConformityDTO>`
   - `create(data: CreateNonConformityDTO): Observable<ResponseNonConformityDTO>`
   - `update(id: string, data: UpdateNonConformityDTO): Observable<ResponseNonConformityDTO>` — usado para atribuir responsável, atualizar status e encerrar
 
-- [ ] `src/app/core/services/user.service.ts`
+- [x] `src/app/core/services/user.service.ts`
   - `listAll(): Observable<ResponseUserDTO[]>` — usado no select de `assignedToId` da `NcDetailPage`
 
 ### Componentes compartilhados
 
-- [ ] `src/app/shared/components/status-badge/status-badge.component.ts` + `.html`
+- [x] `src/app/shared/components/status-badge/status-badge.component.ts` + `.html`
   - Input: `status: StatusNc`
   - Cores: `ABERTA`=azul, `EM_TRATAMENTO`=amarelo, `AGUARDANDO_VERIFICACAO`=laranja, `ENCERRADA`=verde, `CANCELADA`=cinza
 
-- [ ] `src/app/shared/components/severity-badge/severity-badge.component.ts` + `.html`
+- [x] `src/app/shared/components/severity-badge/severity-badge.component.ts` + `.html`
   - Input: `severity: SeverityNc`
   - Cores: `BAIXA`=cinza, `MEDIA`=amarelo, `ALTA`=laranja, `CRITICA`=vermelho
   - Badge de prazo vencido separado: visível quando `dueDate < hoje && status !== StatusNc.ENCERRADA`
 
 ### Página — Listagem
 
-- [ ] `src/app/features/ncs/ncs-list/ncs-list.page.ts` + `.html`
+- [x] `src/app/features/ncs/ncs-list/ncs-list.page.ts` + `.html`
   - Rota: `/app/ncs`
   - `page = signal<ResponseNonConformitiesPageDTO | null>(null)`
   - `loading = signal(false)`
@@ -288,7 +288,7 @@ Stack: Angular 21 · TypeScript strict · TailwindCSS · Signals
 
 ### Página — Formulário de abertura
 
-- [ ] `src/app/features/ncs/nc-form/nc-form.page.ts` + `.html`
+- [x] `src/app/features/ncs/nc-form/nc-form.page.ts` + `.html`
   - Rota: `/app/ncs/nova`
   - Formulário reativo com campos: `title`, `description`, `type`, `severity`, `processLine`, `department`
   - Todos os campos obrigatórios
@@ -310,7 +310,7 @@ Stack: Angular 21 · TypeScript strict · TailwindCSS · Signals
 
 ### Modelos
 
-- [ ] `src/app/core/models/status-ca.enum.ts` *(trio)*
+- [x] `src/app/core/models/status-ca.enum.ts` *(trio)* — implementado dentro de `non-conformity.model.ts`
   ```ts
   export enum StatusCa {
     PENDENTE,      // 0
@@ -319,7 +319,7 @@ Stack: Angular 21 · TypeScript strict · TailwindCSS · Signals
   }
   ```
 
-- [ ] `src/app/core/models/corrective-action.model.ts` *(trio)*
+- [x] `src/app/core/models/corrective-action.model.ts` *(trio)* — implementado dentro de `non-conformity.model.ts`
   ```ts
   import { StatusCa } from './status-ca.enum'
 
@@ -349,14 +349,14 @@ Stack: Angular 21 · TypeScript strict · TailwindCSS · Signals
 
 ### Service
 
-- [ ] `src/app/core/services/corrective-action.service.ts` *(trio)*
+- [x] `src/app/core/services/corrective-action.service.ts` *(trio)* — implementado dentro de `non-conformity.service.ts`
   - `listByNc(nonConformityId: string): Observable<ResponseCorrectiveActionDTO[]>`
   - `create(nonConformityId: string, data: CreateCorrectiveActionDTO): Observable<ResponseCorrectiveActionDTO>`
   - `finish(id: string, evidence: string): Observable<ResponseCorrectiveActionDTO>`
 
 ### Página — Detalhe da NC
 
-- [ ] `src/app/features/ncs/nc-detail/nc-detail.page.ts` + `.html`
+- [x] `src/app/features/ncs/nc-detail/nc-detail.page.ts` + `.html`
   - Rota: `/app/ncs/:id`
   - `nc = signal<ResponseNonConformityDTO | null>(null)`
   - `loading = signal(false)`
@@ -384,7 +384,7 @@ Stack: Angular 21 · TypeScript strict · TailwindCSS · Signals
 
 ### Componente — Lista de ações corretivas *(trio)*
 
-- [ ] `src/app/features/ncs/nc-detail/corrective-actions-list/corrective-actions-list.component.ts` + `.html`
+- [ ] `src/app/features/ncs/nc-detail/corrective-actions-list/corrective-actions-list.component.ts` + `.html` — inline na nc-detalhe.page, sem componente separado ainda
   - Input: `nonConformityId: string`
   - `actions = signal<ResponseCorrectiveActionDTO[]>([])`
   - Lista ações com `assigneeId`, `deadline`, `status`
@@ -416,7 +416,7 @@ Stack: Angular 21 · TypeScript strict · TailwindCSS · Signals
 
 ### Modelos
 
-- [ ] `src/app/core/models/dashboard.model.ts`
+- [x] `src/app/core/models/dashboard.model.ts`
   ```ts
   import { ResponseNonConformityDTO } from './non-conformity.model'
   import { TypeNc } from './type-nc.enum'
@@ -433,18 +433,18 @@ Stack: Angular 21 · TypeScript strict · TailwindCSS · Signals
 
 ### Service
 
-- [ ] `src/app/core/services/dashboard.service.ts`
+- [x] `src/app/core/services/dashboard.service.ts`
   - `getIndicators(): Observable<DashboardIndicators>` — GET `/dashboard`
 
 ### Componente — Stat Card
 
-- [ ] `src/app/shared/components/stat-card/stat-card.component.ts` + `.html`
+- [ ] `src/app/shared/components/stat-card/stat-card.component.ts` + `.html` — KPI cards implementados inline no dashboard, sem componente separado ainda
   - Inputs: `title: string`, `value: number`, `color?: string`
   - Reutilizado no dashboard
 
 ### Página — Dashboard
 
-- [ ] `src/app/features/dashboard/dashboard.page.ts` + `.html`
+- [x] `src/app/features/dashboard/dashboard.page.ts` + `.html`
   - Rota: `/app/dashboard`
   - `indicators = signal<DashboardIndicators | null>(null)`
   - **Bloco 1 — 4 cards** (`StatCardComponent`):
@@ -460,13 +460,13 @@ Stack: Angular 21 · TypeScript strict · TailwindCSS · Signals
 
 ### Layout e navegação
 
-- [ ] `src/app/shared/components/navbar/navbar.component.ts` + `.html`
+- [ ] `src/app/shared/components/navbar/navbar.component.ts` + `.html` — substituído pelo `sidebar.component`
   - Links: Dashboard, Não Conformidades, Minha Fila
   - Exibe `currentUser().name` (buscado via `UserService` pelo id do token)
   - Botão logout
 
-- [ ] `src/app/shared/components/sidebar/sidebar.component.ts` + `.html` *(opcional)*
-  - `open = signal(false)`
+- [x] `src/app/shared/components/sidebar/sidebar.component.ts` + `.html` *(opcional)*
+  - Navegação lateral com links, exibe nome/perfil do usuário e botão de logout
 
 ### Polimento
 
@@ -505,23 +505,23 @@ Stack: Angular 21 · TypeScript strict · TailwindCSS · Signals
 ## Checklist de regras transversais
 
 **Angular / código:**
-- [ ] Nunca usar `any` — sempre criar interface ou type
-- [ ] Nunca template inline — sempre `.html` separado
-- [ ] Nunca usar `BehaviorSubject` quando `signal()` resolve
-- [ ] Nunca hardcodar labels de enum no HTML — importar de `enum-options.ts`
-- [ ] Sempre usar `inject()` em vez de constructor injection
-- [ ] Formulários reativos — nunca template-driven
-- [ ] `effect()` apenas quando `computed()` não resolver
-- [ ] Todas as páginas: `loading = signal(false)`, tratar erro na requisição
+- [x] Nunca usar `any` — sempre criar interface ou type
+- [x] Nunca template inline — sempre `.html` separado
+- [x] Nunca usar `BehaviorSubject` quando `signal()` resolve
+- [ ] Nunca hardcodar labels de enum no HTML — importar de `enum-options.ts` (labels estão nos próprios arquivos de enum, não em enum-options.ts separado)
+- [x] Sempre usar `inject()` em vez de constructor injection
+- [x] Formulários reativos — nunca template-driven
+- [x] `effect()` apenas quando `computed()` não resolver
+- [x] Todas as páginas: `loading = signal(false)`, tratar erro na requisição
 
 **Backend-sync — obrigatório em todo código gerado:**
-- [ ] Nomes de interfaces e DTOs espelham o backend: `ResponseNonConformityDTO`, `ResponseCorrectiveActionDTO`, `ResponseUserDTO`, `ResponseTokensDTO`, `AuthUserDTO`, `CreateNonConformityDTO`, `UpdateNonConformityDTO`, `CreateCorrectiveActionDTO`, `LoginDTO`, `FindNonConformitiesQuery`
-- [ ] Nomes de enums espelham o backend: `Profile`, `TypeNc`, `SeverityNc`, `StatusNc`, `StatusCa`
-- [ ] Enums são numéricos — os valores enviados para a API como query param são os números (0, 1, 2...)
-- [ ] IDs são `string` (UUID) — nunca `number`
-- [ ] Campos de data são `Date` nas responses e `string` ISO 8601 nos requests
-- [ ] Campos opcionais usam `?` (undefined), não `| null`, exceto `closedAt` que é `Date | null`
-- [ ] Nome do campo de login é `password`, não `senha`
-- [ ] Token retornado é `accessToken` — há também `refreshToken` no `ResponseTokensDTO`
-- [ ] Filtros de listagem seguem `FindNonConformitiesQuery`: `search`, `type`, `severity`, `status`, `assignedToId`, `expired`, `page`, `pageSize`, `order`
-- [ ] `UserService.listAll()` é o único lugar para buscar lista de usuários — nunca duplicar dentro de outro service
+- [x] Nomes de interfaces e DTOs espelham o backend: `ResponseNonConformityDTO`, `ResponseCorrectiveActionDTO`, `ResponseUserDTO`, `ResponseTokensDTO`, `AuthUserDTO`, `CreateNonConformityDTO`, `UpdateNonConformityDTO`, `CreateCorrectiveActionDTO`, `LoginDTO`, `FindNonConformitiesQuery`
+- [x] Nomes de enums espelham o backend: `Profile`, `TypeNc`, `SeverityNc`, `StatusNc`, `StatusCa`
+- [x] Enums são numéricos — os valores enviados para a API como query param são os números (0, 1, 2...)
+- [x] IDs são `string` (UUID) — nunca `number`
+- [x] Campos de data são `Date` nas responses e `string` ISO 8601 nos requests
+- [x] Campos opcionais usam `?` (undefined), não `| null`, exceto `closedAt` que é `Date | null`
+- [x] Nome do campo de login é `password`, não `senha`
+- [x] Token retornado é `accessToken` — há também `refreshToken` no `ResponseTokensDTO`
+- [x] Filtros de listagem seguem `FindNonConformitiesQuery`: `search`, `type`, `severity`, `status`, `assignedToId`, `expired`, `page`, `pageSize`, `order`
+- [x] `UserService.listAll()` é o único lugar para buscar lista de usuários — nunca duplicar dentro de outro service

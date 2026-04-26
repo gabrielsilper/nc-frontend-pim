@@ -271,7 +271,7 @@
         <div class="px-5 py-4 border-b border-nc-line bg-nc-panel grid grid-cols-[1fr_140px_auto] gap-2 items-end">
           <input [(ngModel)]="newActionDesc" placeholder="O que deve ser feito"
             class="px-2.5 py-1.5 border border-nc-line-strong text-[12.5px] rounded-sm outline-none focus:border-nc-ink" />
-          <input [(ngModel)]="newActionDeadline" type="date"
+          <input [(ngModel)]="newActionDeadline" type="date" lang="pt-BR"
             class="px-2.5 py-1.5 border border-nc-line-strong text-[12.5px] rounded-sm outline-none focus:border-nc-ink" />
           <button (click)="addAction()" [disabled]="savingAction() || !newActionDesc.trim() || !newActionDeadline"
             class="px-3 py-1.5 bg-nc-ink text-white text-[12px] font-medium rounded-sm disabled:opacity-50">
@@ -332,65 +332,117 @@
   <!-- Sidebar -->
   <aside class="flex flex-col gap-4 sticky top-0">
 
+    <!-- Prazo -->
+    <section class="bg-white border border-nc-line rounded-sm">
+      <div class="px-4 py-3 border-b border-nc-line flex items-center justify-between">
+        <div class="font-mono text-[9.5px] text-nc-muted uppercase tracking-widest">Prazo NC</div>
+        @if (isOverdue()) { <nc-overdue-badge /> }
+      </div>
+      <div class="p-4">
+        @if (isGestor()) {
+          <input type="date" lang="pt-BR" [(ngModel)]="dueDateLocal" (change)="saveDueDate()"
+            class="px-2 py-1.5 border border-nc-line-strong text-[12.5px] rounded-sm outline-none focus:border-nc-ink w-full"
+            [class]="isOverdue() ? 'text-nc-critical' : ''" />
+          @if (!dueDateLocal) {
+            <div class="mt-1 text-[11.5px] text-nc-muted italic">Prazo não definido</div>
+          }
+        } @else if (n.dueDate) {
+          <div class="text-[12.5px] font-mono font-semibold" [class]="isOverdue() ? 'text-nc-critical' : 'text-nc-ink'">
+            {{ n.dueDate | date:'dd/MM/yyyy HH:mm' }}
+          </div>
+        } @else {
+          <div class="text-[12px] text-nc-muted italic">Não definido</div>
+        }
+      </div>
+    </section>
+
     <!-- Atribuição -->
     <section class="bg-white border border-nc-line rounded-sm">
       <div class="px-4 py-3 border-b border-nc-line">
-        <div class="text-[13px] font-semibold">Atribuição</div>
+        <div class="font-mono text-[9.5px] text-nc-muted uppercase tracking-widest">Atribuição</div>
       </div>
-      <div class="p-4 flex flex-col gap-4">
-        <!-- Responsável -->
-        <div>
-          <div class="font-mono text-[9.5px] text-nc-muted uppercase tracking-wider mb-1.5">Responsável</div>
-          @if (n.assignedTo) {
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <div class="w-7 h-7 rounded-full bg-nc-ink flex items-center justify-center text-white text-[11px] font-semibold shrink-0">
-                  {{ n.assignedTo.name.charAt(0).toUpperCase() }}
-                </div>
-                <div>
-                  <div class="text-[12.5px] font-medium">{{ n.assignedTo.name }}</div>
+      <div class="p-4">
+        @if (assignee(); as a) {
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-full bg-nc-ink flex items-center justify-center text-white text-[12px] font-semibold shrink-0">
+                {{ a.name.charAt(0).toUpperCase() }}
+              </div>
+              <div>
+                <div class="text-[12.5px] font-medium">{{ a.name }}</div>
+                <div class="font-mono text-[9.5px] text-nc-muted uppercase tracking-wider">
+                  {{ PROFILE_LABEL[a.profile] }} · {{ n.department }}
                 </div>
               </div>
             </div>
-          } @else {
+            @if (isGestor()) {
+              <button (click)="openAssign()"
+                class="p-1 text-nc-muted hover:text-nc-ink transition-colors"
+                title="Editar responsável">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                </svg>
+              </button>
+            }
+          </div>
+        } @else {
+          <div class="flex items-center justify-between">
             <div class="text-[12px] text-nc-muted italic">Não atribuída</div>
-          }
-        </div>
+            @if (isGestor()) {
+              <button (click)="openAssign()"
+                class="px-2.5 py-1 bg-nc-ink text-white text-[11px] font-medium rounded-sm hover:opacity-90">
+                Atribuir
+              </button>
+            }
+          </div>
+        }
 
-        <!-- Prazo NC -->
-        <div>
-          <div class="font-mono text-[9.5px] text-nc-muted uppercase tracking-wider mb-1">Prazo NC</div>
-          @if (isGestor()) {
-            <input type="date" [(ngModel)]="dueDateLocal" (change)="saveDueDate()"
-              class="px-2 py-1 border border-nc-line-strong text-[12.5px] rounded-sm outline-none focus:border-nc-ink w-full"
-              [class]="isOverdue() ? 'text-nc-critical' : ''" />
-          } @else if (n.dueDate) {
-            <div class="text-[12.5px] font-mono font-semibold" [class]="isOverdue() ? 'text-nc-critical' : 'text-nc-ink'">
-              {{ n.dueDate | date:'dd/MM/yyyy HH:mm' }}
+        @if (showAssignForm()) {
+          <div class="mt-3 pt-3 border-t border-nc-line flex flex-col gap-2">
+            <select [(ngModel)]="selectedUserId"
+              class="w-full px-2.5 py-1.5 border border-nc-line-strong text-[12.5px] rounded-sm bg-white outline-none focus:border-nc-ink">
+              <option value="" disabled>Selecionar responsável…</option>
+              @for (u of users(); track u.id) {
+                <option [value]="u.id">{{ u.name }} ({{ PROFILE_LABEL[u.profile] }})</option>
+              }
+            </select>
+            <div class="flex gap-2">
+              <button (click)="confirmAssign()" [disabled]="assignLoading() || !selectedUserId"
+                class="flex-1 py-1 bg-nc-ink text-white text-[11px] font-medium rounded-sm disabled:opacity-50">
+                {{ assignLoading() ? 'Salvando…' : 'Confirmar' }}
+              </button>
+              <button (click)="closeAssign()"
+                class="flex-1 py-1 border border-nc-line-strong text-[11px] rounded-sm hover:bg-nc-panel">
+                Cancelar
+              </button>
             </div>
-          } @else {
-            <div class="text-[12px] text-nc-muted italic">Não definido</div>
-          }
+          </div>
+        }
+      </div>
+    </section>
 
-          @if (timeRemaining(); as tr) {
-            <div class="mt-0.5 font-mono text-[10.5px]" [class]="isOverdue() ? 'text-nc-critical' : 'text-nc-ink-3'">
-              {{ isOverdue() ? 'Prazo vencido' : tr + ' restantes' }}
+    <!-- Aberta por -->
+    <section class="bg-white border border-nc-line rounded-sm">
+      <div class="px-4 py-3 border-b border-nc-line">
+        <div class="font-mono text-[9.5px] text-nc-muted uppercase tracking-widest">Aberta por</div>
+      </div>
+      <div class="p-4">
+        @if (creator(); as c) {
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-full bg-nc-ink-2 flex items-center justify-center text-white text-[12px] font-semibold shrink-0">
+              {{ c.name.charAt(0).toUpperCase() }}
             </div>
-          }
-        </div>
-
-        <!-- Aberta em -->
-        <div>
-          <div class="font-mono text-[9.5px] text-nc-muted uppercase tracking-wider mb-1">Aberta em</div>
-          <div class="text-[12.5px] font-mono">{{ n.openedAt | date:'dd/MM/yyyy HH:mm' }}</div>
-        </div>
-
-        <!-- Aberta por -->
-        <div>
-          <div class="font-mono text-[9.5px] text-nc-muted uppercase tracking-wider mb-1">Aberta por</div>
-          <!-- mocked: createdBy não é retornado pelo mapper atual (ver REVIEW-TO-DO #18) -->
-          <div class="text-[12.5px]">–</div>
-        </div>
+            <div>
+              <div class="text-[12.5px] font-medium">{{ c.name }}</div>
+              <div class="font-mono text-[9.5px] text-nc-muted uppercase tracking-wider">
+                {{ PROFILE_LABEL[c.profile] }} · {{ n.processLine }}
+              </div>
+            </div>
+          </div>
+        } @else {
+          <div class="text-[12px] text-nc-muted italic">Carregando…</div>
+        }
       </div>
     </section>
 
