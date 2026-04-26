@@ -3,6 +3,7 @@ import { LoginPage } from './pages/login/login.page';
 import { DashboardPage } from './pages/dashboard/dashboard.page';
 import { NcListaPage } from './pages/nc-lista/nc-lista.page';
 import { NcNovaPage } from './pages/nc-nova/nc-nova.page';
+import { NcDetalhePage } from './pages/nc-detalhe/nc-detalhe.page';
 import { AppLayoutComponent } from './shared/components/app-layout/app-layout.component';
 import { authGuard } from './core/guards/auth.guard';
 
@@ -15,6 +16,7 @@ export const routes: Routes = [
     children: [
       { path: 'dashboard', component: DashboardPage },
       { path: 'ncs/nova', component: NcNovaPage },
+      { path: 'ncs/:id', component: NcDetalhePage },
       { path: 'ncs', component: NcListaPage },
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
     ],

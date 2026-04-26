@@ -1,0 +1,437 @@
+@if (nc(); as n) {
+
+<!-- Header -->
+<div class="h-14 bg-white border-b border-nc-line px-6 flex items-center gap-3 flex-shrink-0 sticky top-0 z-10">
+  <div class="flex items-center gap-2 min-w-0 flex-1">
+    <a routerLink="/app/ncs" class="font-mono text-[11px] text-nc-muted hover:text-nc-ink-2 shrink-0">
+      NCS
+    </a>
+    <span class="font-mono text-[11px] text-nc-muted shrink-0">/</span>
+    <span class="font-mono text-[11px] text-nc-muted shrink-0">{{ n.number }}</span>
+    <span class="text-nc-line mx-1 shrink-0">|</span>
+    <h1 class="text-[15px] font-semibold m-0 truncate">{{ n.title }}</h1>
+  </div>
+
+  <div class="flex items-center gap-2 shrink-0">
+    <nc-severity-badge [severity]="n.severity" />
+    <nc-status-badge [status]="n.status" />
+    @if (isOverdue()) { <nc-overdue-badge /> }
+  </div>
+
+  <div class="flex items-center gap-2 shrink-0">
+    @if (isResponsavel()) {
+      <button (click)="openEdit()"
+        class="flex items-center gap-1.5 px-3 py-1.5 border border-nc-line-strong text-[12px] rounded-sm hover:bg-nc-panel">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+        </svg>
+        Editar
+      </button>
+    }
+
+    @if (canCancel()) {
+      <button (click)="transition(StatusNc.CANCELADA)"
+        class="px-3 py-1.5 border border-nc-critical text-nc-critical text-[12px] rounded-sm hover:bg-nc-critical-soft">
+        Cancelar NC
+      </button>
+    }
+
+    @if (primaryNext(); as next) {
+      <button (click)="transition(next)"
+        class="px-3 py-1.5 bg-nc-ink text-white text-[12px] font-medium rounded-sm hover:opacity-90">
+        Avançar para {{ STATUS_LABEL[next] }} →
+      </button>
+    }
+  </div>
+</div>
+
+<!-- Timeline -->
+<div class="bg-white border-b border-nc-line px-6 py-3 flex items-start gap-0">
+  @for (step of timelineSteps; track step; let i = $index; let last = $last) {
+    @let stepStatus = timelineStepStatus(step);
+    <div class="flex items-center flex-1">
+      <div class="flex flex-col items-center">
+        <!-- Circle -->
+        @if (stepStatus === 'done') {
+          <div class="w-7 h-7 rounded-full bg-nc-ink flex items-center justify-center">
+            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+          </div>
+        } @else if (stepStatus === 'current') {
+          <div class="w-7 h-7 rounded-full bg-nc-ink flex items-center justify-center">
+            <span class="text-white text-[11px] font-bold">{{ i + 1 }}</span>
+          </div>
+        } @else {
+          <div class="w-7 h-7 rounded-full border-2 border-nc-line-strong bg-white flex items-center justify-center">
+            <span class="text-nc-muted text-[11px]">{{ i + 1 }}</span>
+          </div>
+        }
+        <!-- Label -->
+        <div class="mt-1.5 text-center">
+          <div class="text-[11px] font-medium" [class]="stepStatus !== 'pending' ? 'text-nc-ink' : 'text-nc-muted'">
+            {{ STATUS_LABEL[step] }}
+          </div>
+          <div class="font-mono text-[9.5px] text-nc-muted">
+            @if (stepStatus === 'pending') { Pendente }
+            @else { {{ n.openedAt | date:'dd/MM' }} }
+          </div>
+        </div>
+      </div>
+
+      @if (!last) {
+        <div class="flex-1 h-px mx-2 mt-[-12px]"
+          [class]="stepStatus === 'done' ? 'bg-nc-ink' : 'bg-nc-line-strong'"></div>
+      }
+    </div>
+  }
+</div>
+
+@if (transitionError()) {
+  <div class="mx-6 mt-3 px-4 py-2 bg-nc-critical-soft border border-nc-critical rounded-sm text-[12px] text-nc-critical">
+    {{ transitionError() }}
+  </div>
+}
+
+<!-- Main content -->
+<div class="flex-1 overflow-auto p-6 grid grid-cols-[1fr_340px] gap-4 items-start">
+
+  <!-- Left column -->
+  <div class="flex flex-col gap-4">
+
+    <!-- Descrição / Edit form -->
+    <section class="bg-white border border-nc-line rounded-sm">
+      @if (!showEdit()) {
+        <div class="p-5">
+          <div class="font-mono text-[10px] text-nc-muted uppercase tracking-widest mb-2">Descrição do desvio</div>
+          <p class="text-[13px] leading-relaxed text-nc-ink whitespace-pre-wrap m-0">{{ n.description }}</p>
+
+          <div class="grid grid-cols-4 gap-3 mt-5 pt-4 border-t border-nc-line">
+            <div>
+              <div class="font-mono text-[9.5px] text-nc-muted uppercase tracking-wider mb-0.5">Tipo</div>
+              <div class="text-[12.5px] font-medium">{{ TYPE_LABEL[n.type] }}</div>
+            </div>
+            <div>
+              <div class="font-mono text-[9.5px] text-nc-muted uppercase tracking-wider mb-0.5">Gravidade</div>
+              <div class="text-[12.5px] font-medium">{{ SEVERITY_LABEL[n.severity] }}</div>
+            </div>
+            <div>
+              <div class="font-mono text-[9.5px] text-nc-muted uppercase tracking-wider mb-0.5">Linha</div>
+              <div class="text-[12.5px] font-medium font-mono">{{ n.processLine }}</div>
+            </div>
+            <div>
+              <div class="font-mono text-[9.5px] text-nc-muted uppercase tracking-wider mb-0.5">Setor</div>
+              <div class="text-[12.5px] font-medium">{{ n.department }}</div>
+            </div>
+          </div>
+        </div>
+
+      } @else {
+        <!-- Edit form -->
+        <div class="p-5" [formGroup]="editForm">
+          <div class="font-mono text-[10px] text-nc-muted uppercase tracking-widest mb-4">Editar não conformidade</div>
+
+          @if (editError()) {
+            <div class="mb-4 px-4 py-2 bg-nc-critical-soft border border-nc-critical rounded-sm text-[12px] text-nc-critical">
+              {{ editError() }}
+            </div>
+          }
+
+          <div class="flex flex-col gap-4">
+            <!-- Título -->
+            <div>
+              <label class="block text-[11px] font-semibold uppercase tracking-widest text-nc-ink-2 mb-1">
+                Título <span class="text-nc-critical">*</span>
+              </label>
+              <input formControlName="title" type="text"
+                class="w-full px-3 py-2 border rounded-sm text-[13px] outline-none focus:border-nc-ink"
+                [class]="editForm.controls.title.touched && editForm.controls.title.invalid ? 'border-nc-critical' : 'border-nc-line-strong'" />
+              @if (editForm.controls.title.touched && editForm.controls.title.errors?.['required']) {
+                <p class="mt-1 text-[11.5px] text-nc-critical">Título é obrigatório.</p>
+              }
+            </div>
+
+            <!-- Descrição -->
+            <div>
+              <label class="block text-[11px] font-semibold uppercase tracking-widest text-nc-ink-2 mb-1">
+                Descrição
+              </label>
+              <textarea formControlName="description" rows="4"
+                class="w-full px-3 py-2 border border-nc-line-strong rounded-sm text-[13px] outline-none focus:border-nc-ink resize-y"></textarea>
+            </div>
+
+            <!-- Gravidade + Tipo -->
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-[11px] font-semibold uppercase tracking-widest text-nc-ink-2 mb-2">
+                  Gravidade <span class="text-nc-critical">*</span>
+                </label>
+                <div class="flex flex-wrap gap-2">
+                  @for (s of severities; track s.value) {
+                    <label class="flex items-center gap-1.5 cursor-pointer">
+                      <input type="radio" formControlName="severity" [value]="s.value" class="accent-nc-ink" />
+                      <span class="text-[12.5px]">{{ s.label }}</span>
+                    </label>
+                  }
+                </div>
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold uppercase tracking-widest text-nc-ink-2 mb-2">
+                  Tipo <span class="text-nc-critical">*</span>
+                </label>
+                <div class="flex flex-wrap gap-2">
+                  @for (t of types; track t.value) {
+                    <label class="flex items-center gap-1.5 cursor-pointer">
+                      <input type="radio" formControlName="type" [value]="t.value" class="accent-nc-ink" />
+                      <span class="text-[12.5px]">{{ t.label }}</span>
+                    </label>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- Linha + Setor -->
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-[11px] font-semibold uppercase tracking-widest text-nc-ink-2 mb-1">
+                  Linha <span class="text-nc-critical">*</span>
+                </label>
+                <input formControlName="processLine" type="text"
+                  class="w-full px-3 py-2 border rounded-sm text-[13px] outline-none focus:border-nc-ink"
+                  [class]="editForm.controls.processLine.touched && editForm.controls.processLine.invalid ? 'border-nc-critical' : 'border-nc-line-strong'" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold uppercase tracking-widest text-nc-ink-2 mb-1">
+                  Setor <span class="text-nc-critical">*</span>
+                </label>
+                <input formControlName="department" type="text"
+                  class="w-full px-3 py-2 border rounded-sm text-[13px] outline-none focus:border-nc-ink"
+                  [class]="editForm.controls.department.touched && editForm.controls.department.invalid ? 'border-nc-critical' : 'border-nc-line-strong'" />
+              </div>
+            </div>
+          </div>
+
+          <div class="flex gap-2 mt-5 pt-4 border-t border-nc-line">
+            <button (click)="saveEdit()" [disabled]="loading()"
+              class="px-4 py-1.5 bg-nc-ink text-white text-[12px] font-medium rounded-sm hover:opacity-90 disabled:opacity-50">
+              {{ loading() ? 'Salvando…' : 'Salvar alterações' }}
+            </button>
+            <button (click)="cancelEdit()"
+              class="px-4 py-1.5 border border-nc-line-strong text-[12px] rounded-sm hover:bg-nc-panel">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      }
+    </section>
+
+    <!-- Causa raiz -->
+    <section class="bg-white border border-nc-line rounded-sm p-5">
+      <div class="flex items-center justify-between mb-2">
+        <div class="font-mono text-[10px] text-nc-muted uppercase tracking-widest">Causa raiz</div>
+        @if (n.rootCause && !isResponsavel()) {
+          <span class="font-mono text-[9.5px] text-nc-ok uppercase tracking-wider">Preenchida</span>
+        }
+      </div>
+
+      @if (isResponsavel()) {
+        <textarea rows="3" [(ngModel)]="rootCause"
+          placeholder="Descreva a causa raiz identificada (obrigatório para encerrar)…"
+          class="w-full px-3 py-2 border border-nc-line-strong text-[13px] rounded-sm outline-none focus:border-nc-ink resize-none mb-3"></textarea>
+        <button (click)="saveRootCause()" [disabled]="savingRootCause() || !rootCause.trim()"
+          class="px-3 py-1.5 bg-nc-ink text-white text-[12px] font-medium rounded-sm hover:opacity-90 disabled:opacity-50">
+          {{ savingRootCause() ? 'Salvando…' : 'Salvar causa raiz' }}
+        </button>
+      } @else if (n.rootCause) {
+        <p class="text-[13px] leading-relaxed text-nc-ink whitespace-pre-wrap m-0">{{ n.rootCause }}</p>
+      } @else {
+        <p class="text-[12.5px] text-nc-muted italic m-0">Causa raiz ainda não identificada.</p>
+      }
+    </section>
+
+    <!-- Plano de ação -->
+    <section class="bg-white border border-nc-line rounded-sm">
+      <div class="px-5 py-3.5 border-b border-nc-line flex justify-between items-center">
+        <div>
+          <div class="text-sm font-semibold">Plano de ação</div>
+          <div class="font-mono text-[10px] text-nc-muted uppercase tracking-wider mt-0.5">
+            {{ actions().length }} ações · {{ doneCount() }} concluídas
+          </div>
+        </div>
+        @if (isResponsavel()) {
+          <button (click)="showActionForm.update(v => !v)"
+            class="px-3 py-1.5 bg-nc-ink text-white text-[12px] font-medium rounded-sm hover:opacity-90">
+            + Adicionar ação
+          </button>
+        }
+      </div>
+
+      @if (showActionForm()) {
+        <div class="px-5 py-4 border-b border-nc-line bg-nc-panel grid grid-cols-[1fr_140px_auto] gap-2 items-end">
+          <input [(ngModel)]="newActionDesc" placeholder="O que deve ser feito"
+            class="px-2.5 py-1.5 border border-nc-line-strong text-[12.5px] rounded-sm outline-none focus:border-nc-ink" />
+          <input [(ngModel)]="newActionDeadline" type="date"
+            class="px-2.5 py-1.5 border border-nc-line-strong text-[12.5px] rounded-sm outline-none focus:border-nc-ink" />
+          <button (click)="addAction()" [disabled]="savingAction() || !newActionDesc.trim() || !newActionDeadline"
+            class="px-3 py-1.5 bg-nc-ink text-white text-[12px] font-medium rounded-sm disabled:opacity-50">
+            {{ savingAction() ? 'Salvando…' : 'Salvar' }}
+          </button>
+        </div>
+      }
+
+      @if (actions().length > 0) {
+        <table class="w-full text-[12.5px]">
+          <thead>
+            <tr class="border-b border-nc-line">
+              <th class="px-5 py-2.5 text-left font-mono text-[9.5px] text-nc-muted uppercase tracking-wider w-16">ID</th>
+              <th class="px-3 py-2.5 text-left font-mono text-[9.5px] text-nc-muted uppercase tracking-wider">Ação</th>
+              <th class="px-3 py-2.5 text-left font-mono text-[9.5px] text-nc-muted uppercase tracking-wider w-28">Prazo</th>
+              <th class="px-3 py-2.5 text-left font-mono text-[9.5px] text-nc-muted uppercase tracking-wider w-32">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (a of actions(); track a.id) {
+              <tr class="border-b border-nc-line last:border-b-0 hover:bg-nc-panel">
+                <td class="px-5 py-3 font-mono text-nc-muted">{{ actionIndex(a.id) }}</td>
+                <td class="px-3 py-3">
+                  <div class="text-nc-ink">{{ a.description }}</div>
+                  @if (a.evidence) {
+                    <div class="mt-1 px-2 py-1 bg-nc-ok/10 border-l-2 border-nc-ok text-[11.5px] text-nc-ink-2 font-mono">
+                      EVIDÊNCIA › {{ a.evidence }}
+                    </div>
+                  }
+                </td>
+                <td class="px-3 py-3 font-mono text-nc-ink-3">{{ a.deadline | date:'dd/MM/yyyy' }}</td>
+                <td class="px-3 py-3">
+                  @if (a.status === StatusCa.CONCLUIDA) {
+                    <span class="px-2 py-0.5 bg-nc-ok/10 text-nc-ok text-[11px] font-semibold uppercase tracking-wider rounded-sm">
+                      {{ STATUS_CA_LABEL[a.status] }}
+                    </span>
+                  } @else if (a.status === StatusCa.EM_ANDAMENTO) {
+                    <span class="px-2 py-0.5 bg-nc-accent/10 text-nc-accent text-[11px] font-semibold uppercase tracking-wider rounded-sm">
+                      {{ STATUS_CA_LABEL[a.status] }}
+                    </span>
+                  } @else {
+                    <span class="px-2 py-0.5 bg-nc-panel text-nc-muted text-[11px] font-semibold uppercase tracking-wider rounded-sm">
+                      {{ STATUS_CA_LABEL[a.status] }}
+                    </span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <div class="px-5 py-8 text-center text-[12.5px] text-nc-muted">Nenhuma ação cadastrada ainda.</div>
+      }
+    </section>
+
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="flex flex-col gap-4 sticky top-0">
+
+    <!-- Atribuição -->
+    <section class="bg-white border border-nc-line rounded-sm">
+      <div class="px-4 py-3 border-b border-nc-line">
+        <div class="text-[13px] font-semibold">Atribuição</div>
+      </div>
+      <div class="p-4 flex flex-col gap-4">
+        <!-- Responsável -->
+        <div>
+          <div class="font-mono text-[9.5px] text-nc-muted uppercase tracking-wider mb-1.5">Responsável</div>
+          @if (n.assignedTo) {
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <div class="w-7 h-7 rounded-full bg-nc-ink flex items-center justify-center text-white text-[11px] font-semibold shrink-0">
+                  {{ n.assignedTo.name.charAt(0).toUpperCase() }}
+                </div>
+                <div>
+                  <div class="text-[12.5px] font-medium">{{ n.assignedTo.name }}</div>
+                </div>
+              </div>
+            </div>
+          } @else {
+            <div class="text-[12px] text-nc-muted italic">Não atribuída</div>
+          }
+        </div>
+
+        <!-- Prazo NC -->
+        <div>
+          <div class="font-mono text-[9.5px] text-nc-muted uppercase tracking-wider mb-1">Prazo NC</div>
+          @if (isGestor()) {
+            <input type="date" [(ngModel)]="dueDateLocal" (change)="saveDueDate()"
+              class="px-2 py-1 border border-nc-line-strong text-[12.5px] rounded-sm outline-none focus:border-nc-ink w-full"
+              [class]="isOverdue() ? 'text-nc-critical' : ''" />
+          } @else if (n.dueDate) {
+            <div class="text-[12.5px] font-mono font-semibold" [class]="isOverdue() ? 'text-nc-critical' : 'text-nc-ink'">
+              {{ n.dueDate | date:'dd/MM/yyyy HH:mm' }}
+            </div>
+          } @else {
+            <div class="text-[12px] text-nc-muted italic">Não definido</div>
+          }
+
+          @if (timeRemaining(); as tr) {
+            <div class="mt-0.5 font-mono text-[10.5px]" [class]="isOverdue() ? 'text-nc-critical' : 'text-nc-ink-3'">
+              {{ isOverdue() ? 'Prazo vencido' : tr + ' restantes' }}
+            </div>
+          }
+        </div>
+
+        <!-- Aberta em -->
+        <div>
+          <div class="font-mono text-[9.5px] text-nc-muted uppercase tracking-wider mb-1">Aberta em</div>
+          <div class="text-[12.5px] font-mono">{{ n.openedAt | date:'dd/MM/yyyy HH:mm' }}</div>
+        </div>
+
+        <!-- Aberta por -->
+        <div>
+          <div class="font-mono text-[9.5px] text-nc-muted uppercase tracking-wider mb-1">Aberta por</div>
+          <!-- mocked: createdBy não é retornado pelo mapper atual (ver REVIEW-TO-DO #18) -->
+          <div class="text-[12.5px]">–</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Histórico (mocked — ver REVIEW-TO-DO #10) -->
+    <section class="bg-white border border-nc-line rounded-sm">
+      <div class="px-4 py-3 border-b border-nc-line">
+        <div class="text-[13px] font-semibold">Histórico</div>
+      </div>
+      <div class="p-4 flex flex-col gap-3">
+        <div class="flex gap-3 items-start">
+          <div class="w-2 h-2 rounded-full bg-nc-accent mt-1.5 shrink-0"></div>
+          <div>
+            <div class="text-[12px] text-nc-ink">Atualizou prazo</div>
+            <div class="font-mono text-[10px] text-nc-muted">hoje · sistema</div>
+          </div>
+        </div>
+        <div class="flex gap-3 items-start">
+          <div class="w-2 h-2 rounded-full bg-nc-line-strong mt-1.5 shrink-0"></div>
+          <div>
+            <div class="text-[12px] text-nc-ink">Alterou status de <b>Aberta</b> para <b>Em tratamento</b></div>
+            <div class="font-mono text-[10px] text-nc-muted">{{ n.openedAt | date:'dd/MM HH:mm' }} · sistema</div>
+          </div>
+        </div>
+        <div class="flex gap-3 items-start">
+          <div class="w-2 h-2 rounded-full bg-nc-line-strong mt-1.5 shrink-0"></div>
+          <div>
+            <div class="text-[12px] text-nc-ink">Registrou não conformidade</div>
+            <div class="font-mono text-[10px] text-nc-muted">{{ n.openedAt | date:'dd/MM HH:mm' }} · sistema</div>
+          </div>
+        </div>
+        <div class="pt-1 font-mono text-[10px] text-nc-muted italic">
+          Histórico completo disponível em breve.
+        </div>
+      </div>
+    </section>
+
+  </aside>
+</div>
+
+} @else {
+  <div class="flex-1 flex items-center justify-center">
+    <div class="text-[13px] text-nc-muted">Carregando…</div>
+  </div>
+}

@@ -2,6 +2,18 @@ import { SeverityNc } from './severity-nc.enum';
 import { StatusNc } from './status-nc.enum';
 import { TypeNc } from './type-nc.enum';
 
+export enum StatusCa {
+  PENDENTE = 0,
+  EM_ANDAMENTO = 1,
+  CONCLUIDA = 2,
+}
+
+export const STATUS_CA_LABEL: Record<StatusCa, string> = {
+  [StatusCa.PENDENTE]: 'Pendente',
+  [StatusCa.EM_ANDAMENTO]: 'Em andamento',
+  [StatusCa.CONCLUIDA]: 'Concluída',
+};
+
 export interface ResponseNonConformityDTO {
   id: string;
   number: string;
@@ -48,4 +60,35 @@ export interface FindNonConformitiesQuery {
   severity?: SeverityNc;
   type?: TypeNc;
   expired?: 0 | 1;
+}
+
+export interface UpdateNonConformityDTO {
+  title?: string;
+  description?: string;
+  type?: TypeNc;
+  severity?: SeverityNc;
+  processLine?: string;
+  department?: string;
+  rootCause?: string;
+}
+
+export interface ResponseCorrectiveActionDTO {
+  id: string;
+  description: string;
+  status: StatusCa;
+  deadline: string;
+  evidence?: string;
+  nonConformityId: string;
+  assigneeId: string;
+  finishedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateCorrectiveActionDTO {
+  description: string;
+  status: StatusCa;
+  deadline: string;
+  assigneeId: string;
+  evidence?: string;
 }
