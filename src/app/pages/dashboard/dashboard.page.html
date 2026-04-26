@@ -33,11 +33,14 @@
 
   <div class="grid grid-cols-[1fr_360px] gap-4">
     <div class="bg-nc-surface border border-nc-line rounded-sm">
-      <div class="px-4.5 py-3.5 border-b border-nc-line">
-        <div class="text-sm font-semibold">NCs recentes</div>
-        <div class="font-mono text-[10px] text-nc-muted uppercase tracking-wider mt-0.5">
-          Últimas 10 · ordenado por abertura
+      <div class="px-4.5 py-3.5 border-b border-nc-line flex items-center">
+        <div class="flex-1">
+          <div class="text-sm font-semibold">NCs recentes</div>
+          <div class="font-mono text-[10px] text-nc-muted uppercase tracking-wider mt-0.5">
+            Últimas 10 · ordenado por abertura
+          </div>
         </div>
+        <a routerLink="/app/ncs" class="text-[12px] text-nc-ink-2 hover:text-nc-ink underline-offset-2 hover:underline">Ver todas →</a>
       </div>
       <table class="w-full text-[12.5px] border-collapse">
         <thead class="bg-nc-panel font-mono text-[10px] text-nc-ink-3 tracking-wider uppercase">

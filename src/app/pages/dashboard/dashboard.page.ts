@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { DashboardService } from '../../core/services/dashboard.service';
 import { NonConformityService } from '../../core/services/non-conformity.service';
 import { DashboardCountsDTO, RankingItemDTO } from '../../core/models/dashboard.model';
@@ -29,7 +30,7 @@ interface KpiCard {
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [CommonModule, SeverityBadgeComponent, StatusBadgeComponent, OverdueBadgeComponent],
+  imports: [CommonModule, RouterLink, SeverityBadgeComponent, StatusBadgeComponent, OverdueBadgeComponent],
   templateUrl: './dashboard.page.html',
 })
 export class DashboardPage {
