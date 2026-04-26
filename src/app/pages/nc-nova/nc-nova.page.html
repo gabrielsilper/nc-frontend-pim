@@ -1,0 +1,178 @@
+<div class="h-14 bg-nc-surface border-b border-nc-line px-6 flex items-center sticky top-0 z-10">
+  <div>
+    <div class="font-mono text-[10px] text-nc-muted uppercase tracking-widest mb-0.5">NCS / NOVA</div>
+    <h1 class="text-[17px] font-semibold m-0 tracking-[-0.003em]">Nova Não Conformidade</h1>
+  </div>
+</div>
+
+<div class="p-6">
+  <form [formGroup]="form" (ngSubmit)="submit()">
+
+    <div class="bg-nc-surface border border-nc-line rounded-sm p-6 flex flex-col gap-5">
+
+      @if (apiErrors()['_global']) {
+        <div class="px-4 py-3 bg-nc-critical-soft border border-nc-critical rounded-sm text-[12.5px] text-nc-critical">
+          {{ apiErrors()['_global'] }}
+        </div>
+      }
+
+      <!-- Título -->
+      <div>
+        <div class="flex items-center justify-between mb-1">
+          <label class="text-[11px] font-semibold uppercase tracking-widest text-nc-ink-2">
+            Título <span class="text-nc-critical">*</span>
+          </label>
+          <span class="font-mono text-[11px]" [class]="titleLength() > 120 ? 'text-nc-critical' : 'text-nc-muted'">
+            {{ titleLength() }} / 120
+          </span>
+        </div>
+        <input
+          formControlName="title"
+          type="text"
+          placeholder="Resumo curto e objetivo. Aparece nas listagens e notificações."
+          class="w-full px-3 py-2 border rounded-sm text-[13px] outline-none focus:border-nc-ink"
+          [class]="form.controls.title.touched && form.controls.title.invalid ? 'border-nc-critical' : 'border-nc-line-strong'"
+        />
+        @if (form.controls.title.touched && form.controls.title.errors?.['required']) {
+          <p class="mt-1 text-[11.5px] text-nc-critical">Título é obrigatório.</p>
+        }
+        @if (form.controls.title.touched && form.controls.title.errors?.['maxlength']) {
+          <p class="mt-1 text-[11.5px] text-nc-critical">Título deve ter no máximo 120 caracteres.</p>
+        }
+        @if (apiErrors()['title']) {
+          <p class="mt-1 text-[11.5px] text-nc-critical">{{ apiErrors()['title'] }}</p>
+        }
+      </div>
+
+      <!-- Descrição -->
+      <div>
+        <label class="block text-[11px] font-semibold uppercase tracking-widest text-nc-ink-2 mb-1">
+          Descrição Detalhada <span class="text-nc-critical">*</span>
+        </label>
+        <textarea
+          formControlName="description"
+          rows="5"
+          placeholder="Descreva o que foi observado, onde, e como foi detectado. Inclua referências de especificação quando possível."
+          class="w-full px-3 py-2 border rounded-sm text-[13px] outline-none focus:border-nc-ink resize-y"
+          [class]="form.controls.description.touched && form.controls.description.invalid ? 'border-nc-critical' : 'border-nc-line-strong'"
+        ></textarea>
+        @if (apiErrors()['description']) {
+          <p class="mt-1 text-[11.5px] text-nc-critical">{{ apiErrors()['description'] }}</p>
+        }
+      </div>
+
+      <!-- Gravidade -->
+      <div>
+        <label class="block text-[11px] font-semibold uppercase tracking-widest text-nc-ink-2 mb-2">
+          Gravidade <span class="text-nc-critical">*</span>
+        </label>
+        <div class="flex flex-wrap gap-2">
+          @for (s of severities; track s.value) {
+            <label
+              class="flex items-center gap-2 px-4 py-2 border rounded-sm cursor-pointer text-[13px] select-none"
+              [class]="form.controls.severity.value === s.value
+                ? 'border-nc-ink bg-nc-panel font-medium'
+                : 'border-nc-line-strong hover:bg-nc-panel'"
+            >
+              <input type="radio" formControlName="severity" [value]="s.value" class="sr-only" />
+              <span class="w-2 h-2 rounded-full shrink-0" [class]="s.dotCls"></span>
+              {{ s.label }}
+            </label>
+          }
+        </div>
+        @if (form.controls.severity.touched && form.controls.severity.errors?.['required']) {
+          <p class="mt-1 text-[11.5px] text-nc-critical">Selecione a gravidade.</p>
+        }
+        @if (apiErrors()['severity']) {
+          <p class="mt-1 text-[11.5px] text-nc-critical">{{ apiErrors()['severity'] }}</p>
+        }
+      </div>
+
+      <!-- Tipo de Desvio -->
+      <div>
+        <label class="block text-[11px] font-semibold uppercase tracking-widest text-nc-ink-2 mb-2">
+          Tipo de Desvio <span class="text-nc-critical">*</span>
+        </label>
+        <div class="flex flex-wrap gap-2">
+          @for (t of types; track t.value) {
+            <label
+              class="flex items-center gap-2 px-4 py-2 border rounded-sm cursor-pointer text-[13px] select-none"
+              [class]="form.controls.type.value === t.value
+                ? 'border-nc-ink bg-nc-panel font-medium'
+                : 'border-nc-line-strong hover:bg-nc-panel'"
+            >
+              <input type="radio" formControlName="type" [value]="t.value" class="sr-only" />
+              {{ t.label }}
+            </label>
+          }
+        </div>
+        @if (form.controls.type.touched && form.controls.type.errors?.['required']) {
+          <p class="mt-1 text-[11.5px] text-nc-critical">Selecione o tipo de desvio.</p>
+        }
+        @if (apiErrors()['type']) {
+          <p class="mt-1 text-[11.5px] text-nc-critical">{{ apiErrors()['type'] }}</p>
+        }
+      </div>
+
+      <!-- Linha / Processo e Setor -->
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-[11px] font-semibold uppercase tracking-widest text-nc-ink-2 mb-1">
+            Linha / Processo <span class="text-nc-critical">*</span>
+          </label>
+          <input
+            formControlName="processLine"
+            type="text"
+            placeholder="Ex: Linha 03 — Montagem"
+            class="w-full px-3 py-2 border rounded-sm text-[13px] outline-none focus:border-nc-ink"
+            [class]="form.controls.processLine.touched && form.controls.processLine.invalid ? 'border-nc-critical' : 'border-nc-line-strong'"
+          />
+          @if (form.controls.processLine.touched && form.controls.processLine.errors?.['required']) {
+            <p class="mt-1 text-[11.5px] text-nc-critical">Campo obrigatório.</p>
+          }
+          @if (apiErrors()['processLine']) {
+            <p class="mt-1 text-[11.5px] text-nc-critical">{{ apiErrors()['processLine'] }}</p>
+          }
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold uppercase tracking-widest text-nc-ink-2 mb-1">
+            Setor <span class="text-nc-critical">*</span>
+          </label>
+          <input
+            formControlName="department"
+            type="text"
+            placeholder="Ex: Montagem"
+            class="w-full px-3 py-2 border rounded-sm text-[13px] outline-none focus:border-nc-ink"
+            [class]="form.controls.department.touched && form.controls.department.invalid ? 'border-nc-critical' : 'border-nc-line-strong'"
+          />
+          @if (form.controls.department.touched && form.controls.department.errors?.['required']) {
+            <p class="mt-1 text-[11.5px] text-nc-critical">Campo obrigatório.</p>
+          }
+          @if (apiErrors()['department']) {
+            <p class="mt-1 text-[11.5px] text-nc-critical">{{ apiErrors()['department'] }}</p>
+          }
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Botões -->
+    <div class="flex items-center justify-end gap-3 mt-4">
+      <a
+        [routerLink]="['/app/ncs']"
+        class="px-4 py-2 border border-nc-line-strong text-nc-ink-2 text-[13px] font-medium rounded-sm hover:bg-nc-panel cursor-pointer"
+      >
+        Cancelar
+      </a>
+      <button
+        type="submit"
+        [disabled]="loading()"
+        class="px-4 py-2 bg-nc-accent text-white text-[13px] font-medium rounded-sm hover:opacity-90 disabled:opacity-60"
+      >
+        @if (loading()) { Registrando… } @else { + Registrar NC }
+      </button>
+    </div>
+
+  </form>
+</div>

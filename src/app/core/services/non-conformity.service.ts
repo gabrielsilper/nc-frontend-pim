@@ -2,8 +2,10 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import {
+  CreateNonConformityDTO,
   FindNonConformitiesQuery,
   ResponseNonConformitiesPageDTO,
+  ResponseNonConformityDTO,
 } from '../models/non-conformity.model';
 
 @Injectable({ providedIn: 'root' })
@@ -24,6 +26,13 @@ export class NonConformityService {
     return this.http.get<ResponseNonConformitiesPageDTO>(
       `${environment.apiUrl}/non-conformities`,
       { params },
+    );
+  }
+
+  create(dto: CreateNonConformityDTO) {
+    return this.http.post<ResponseNonConformityDTO>(
+      `${environment.apiUrl}/non-conformities`,
+      dto,
     );
   }
 }

@@ -30,6 +30,15 @@ export interface ResponseNonConformitiesPageDTO {
   hasNext: boolean;
 }
 
+export interface CreateNonConformityDTO {
+  title: string;
+  description: string;
+  type: TypeNc;
+  severity: SeverityNc;
+  processLine: string;
+  department: string;
+}
+
 export interface FindNonConformitiesQuery {
   page?: number;
   pageSize?: number;
