@@ -23,7 +23,10 @@
       <div class="relative bg-nc-surface border border-nc-line p-4 rounded-sm overflow-hidden">
         <div class="absolute left-0 top-0 bottom-0 w-0.75" [class]="k.accentCls"></div>
         <div class="font-mono text-[10px] text-nc-ink-3 tracking-widest mb-2.5">{{ k.label }}</div>
-        <div class="font-mono text-[38px] font-semibold tracking-[-0.04em] leading-none">{{ k.value }}</div>
+        <div class="font-mono text-[38px] font-semibold tracking-[-0.04em] leading-none flex items-center gap-2">
+          {{ k.value }}
+          <span class="material-symbols-outlined text-[28px]" [class]="k.iconCls">{{ k.icon }}</span>
+        </div>
       </div>
     }
   </div>
@@ -43,7 +46,8 @@
             <th class="text-left px-3.5 py-2 font-medium">Título</th>
             <th class="text-left px-3.5 py-2 font-medium">Grav.</th>
             <th class="text-left px-3.5 py-2 font-medium">Status</th>
-            <th class="text-right px-3.5 py-2 font-medium">Aberta há</th>
+            <th class="text-left px-3.5 py-2 font-medium">Prazo</th>
+            <th class="text-right px-3.5 py-2 font-medium">Aberta em</th>
           </tr>
         </thead>
         <tbody>
@@ -58,7 +62,14 @@
               </td>
               <td class="px-3.5 py-2.5"><nc-severity-badge [severity]="n.severity" /></td>
               <td class="px-3.5 py-2.5"><nc-status-badge [status]="n.status" /></td>
-              <td class="px-3.5 py-2.5 text-right font-mono text-[11.5px] text-nc-ink-3">{{ n.ageLabel }}</td>
+              <td class="px-3.5 py-2.5 font-mono text-[11.5px]">
+                @if (n.dueDateLabel) {
+                  <span [class]="n.isOverdue ? 'text-nc-critical' : 'text-nc-ink-3'">{{ n.dueDateLabel }}</span>
+                } @else {
+                  <span class="text-nc-muted">—</span>
+                }
+              </td>
+              <td class="px-3.5 py-2.5 text-right font-mono text-[11.5px] text-nc-ink-3">{{ n.openedAtLabel }}</td>
             </tr>
           } @empty {
             <tr>

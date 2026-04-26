@@ -9,7 +9,8 @@ import { StatusBadgeComponent } from '../../shared/components/status-badge/statu
 import { OverdueBadgeComponent } from '../../shared/components/overdue-badge/overdue-badge.component';
 
 interface RecentNc extends ResponseNonConformityDTO {
-  ageLabel: string;
+  openedAtLabel: string;
+  dueDateLabel?: string;
   isOverdue: boolean;
 }
 
@@ -21,6 +22,8 @@ interface KpiCard {
   label: string;
   value: number | string;
   accentCls: string;
+  icon: string;
+  iconCls: string;
 }
 
 @Component({
@@ -40,10 +43,10 @@ export class DashboardPage {
   kpis = computed<KpiCard[]>(() => {
     const c = this.counts();
     return [
-      { label: 'NCs ABERTAS',              value: c?.openNonConformities ?? '—',     accentCls: 'bg-nc-ink' },
-      { label: 'CRÍTICAS/ALTAS EM ABERTO', value: c?.warningNonConformities ?? '—',  accentCls: 'bg-nc-critical' },
-      { label: 'PRAZO VENCIDO',            value: c?.expiredNonConformities ?? '—',  accentCls: 'bg-nc-accent' },
-      { label: 'ENCERRADAS NO MÊS',        value: c?.closedNonConformities ?? '—',   accentCls: 'bg-nc-ok' },
+      { label: 'NCs ABERTAS',              value: c?.openNonConformities ?? '—',     accentCls: 'bg-nc-ink',      icon: 'list_alt',  iconCls: 'text-nc-ink' },
+      { label: 'CRÍTICAS/ALTAS EM ABERTO', value: c?.warningNonConformities ?? '—',  accentCls: 'bg-nc-critical', icon: 'warning',   iconCls: 'text-nc-critical' },
+      { label: 'PRAZO VENCIDO',            value: c?.expiredNonConformities ?? '—',  accentCls: 'bg-nc-accent',   icon: 'schedule',  iconCls: 'text-nc-accent' },
+      { label: 'ENCERRADAS NO MÊS',        value: c?.closedNonConformities ?? '—',   accentCls: 'bg-nc-ok',       icon: 'task_alt',  iconCls: 'text-nc-ok' },
     ];
   });
 
@@ -61,20 +64,16 @@ export class DashboardPage {
       this.recent.set(
         page.items.map((n) => ({
           ...n,
-          ageLabel: this.ageLabel(n.openedAt),
+          openedAtLabel: this.formatBrDate(n.openedAt),
+          dueDateLabel: n.dueDate ? this.formatBrDate(n.dueDate) : undefined,
           isOverdue: this.isOverdue(n.dueDate, n.closedAt),
         })),
       );
     });
   }
 
-  private ageLabel(iso: string): string {
-    const diffMs = Date.now() - new Date(iso).getTime();
-    const minutes = Math.floor(diffMs / 60000);
-    if (minutes < 60) return `${minutes} min`;
-    const hours = Math.floor(diffMs / 3600000);
-    if (hours < 48) return `${hours} h`;
-    return `${Math.floor(hours / 24)} d`;
+  private formatBrDate(iso: string): string {
+    return new Date(iso).toLocaleDateString('pt-BR');
   }
 
   private isOverdue(dueDate?: string, closedAt?: string | null): boolean {
