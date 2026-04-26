@@ -15,6 +15,7 @@ export interface ResponseNonConformityDTO {
   rootCause?: string;
   createdById: string;
   assignedToId?: string;
+  assignedTo?: { id: string; name: string };
   openedAt: string;
   dueDate?: string;
   closedAt?: string | null;
@@ -33,4 +34,9 @@ export interface FindNonConformitiesQuery {
   page?: number;
   pageSize?: number;
   order?: 'ASC' | 'DESC';
+  search?: string;
+  status?: StatusNc;
+  severity?: SeverityNc;
+  type?: TypeNc;
+  expired?: 0 | 1;
 }

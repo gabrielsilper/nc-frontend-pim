@@ -25,12 +25,21 @@
       <span class="material-symbols-outlined">dashboard</span>
       Dashboard
     </a>
+    <a
+      routerLink="/app/ncs"
+      routerLinkActive="bg-white/5 text-white border-l-nc-accent"
+      [routerLinkActiveOptions]="{ exact: false }"
+      class="flex items-center gap-2.5 px-5 py-2.5 text-[13px] text-white/70 border-l-[3px] border-l-transparent hover:bg-white/5 hover:text-white transition-colors"
+    >
+      <span class="material-symbols-outlined">assignment_late</span>
+      Não Conformidades
+    </a>
   </nav>
 
   <div class="px-4 py-3 border-t border-white/10">
     <div class="flex items-center gap-2.5">
       <div
-        class="w-8 h-8 bg-nc-accent flex items-center justify-center font-mono text-[11px] font-semibold text-white rounded-sm flex-shrink-0"
+        class="w-8 h-8 bg-nc-accent flex items-center justify-center font-mono text-[11px] font-semibold text-white rounded-sm shrink-0"
       >
         {{ initials() }}
       </div>

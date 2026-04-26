@@ -1,0 +1,174 @@
+<div class="h-14 bg-nc-surface border-b border-nc-line px-6 flex items-center gap-6 sticky top-0 z-10">
+  <div class="flex-1">
+    <div class="font-mono text-[10px] text-nc-muted uppercase tracking-widest mb-0.5">Registros</div>
+    <h1 class="text-[17px] font-semibold m-0 tracking-[-0.003em]">Não Conformidades</h1>
+  </div>
+  <span class="font-mono text-[11px] text-nc-ink-3">{{ total() }} registros</span>
+  <button
+    type="button"
+    class="px-3 py-1.5 bg-nc-surface border border-nc-line text-nc-ink-2 text-xs font-medium rounded-sm hover:bg-nc-panel"
+  >
+    Exportar
+  </button>
+  <button
+    type="button"
+    class="px-3.5 py-1.5 bg-nc-accent text-white text-xs font-medium rounded-sm hover:opacity-90"
+  >
+    + Nova NC
+  </button>
+</div>
+
+<div class="p-6">
+  <!-- Filtros -->
+  <div class="bg-nc-surface border border-nc-line rounded-sm px-4 py-3 mb-4 flex flex-wrap items-center gap-3">
+    <input
+      [(ngModel)]="search"
+      (keydown.enter)="applyFilters()"
+      placeholder="Buscar por número ou título…"
+      class="flex-1 min-w-[220px] px-3 py-1.5 border border-nc-line-strong text-[12.5px] rounded-sm outline-none focus:border-nc-ink"
+    />
+    <select
+      [(ngModel)]="statusFilter"
+      class="px-2.5 py-1.5 border border-nc-line-strong text-[12.5px] rounded-sm bg-nc-surface"
+    >
+      <option [ngValue]="null">Todos os status</option>
+      @for (s of statuses; track s) {
+        <option [ngValue]="s">{{ statusLabel(s) }}</option>
+      }
+    </select>
+    <select
+      [(ngModel)]="severityFilter"
+      class="px-2.5 py-1.5 border border-nc-line-strong text-[12.5px] rounded-sm bg-nc-surface"
+    >
+      <option [ngValue]="null">Todas as gravidades</option>
+      @for (s of severities; track s) {
+        <option [ngValue]="s">{{ severityLabel(s) }}</option>
+      }
+    </select>
+    <select
+      [(ngModel)]="typeFilter"
+      class="px-2.5 py-1.5 border border-nc-line-strong text-[12.5px] rounded-sm bg-nc-surface"
+    >
+      <option [ngValue]="null">Todos os tipos</option>
+      @for (t of types; track t) {
+        <option [ngValue]="t">{{ typeLabel(t) }}</option>
+      }
+    </select>
+    <select
+      [(ngModel)]="expiredFilter"
+      class="px-2.5 py-1.5 border border-nc-line-strong text-[12.5px] rounded-sm bg-nc-surface"
+    >
+      <option [ngValue]="null">Todos</option>
+      <option [ngValue]="1">Sim</option>
+      <option [ngValue]="0">Não</option>
+    </select>
+    <button
+      type="button"
+      (click)="applyFilters()"
+      class="px-3.5 py-1.5 bg-nc-ink text-white text-[12px] font-medium rounded-sm hover:opacity-90"
+    >
+      Aplicar filtros
+    </button>
+    <button
+      type="button"
+      (click)="clear()"
+      class="text-[11.5px] text-nc-ink-2 underline"
+    >
+      Limpar filtros
+    </button>
+  </div>
+
+  <!-- Tabela -->
+  <div class="bg-nc-surface border border-nc-line rounded-sm">
+    <table class="w-full text-[12.5px] border-collapse">
+      <thead class="bg-nc-panel font-mono text-[10px] text-nc-ink-3 tracking-wider uppercase">
+        <tr>
+          <th class="text-left px-3.5 py-2 font-medium">Número</th>
+          <th class="text-left px-3.5 py-2 font-medium">Título</th>
+          <th class="text-left px-3.5 py-2 font-medium">Tipo</th>
+          <th class="text-left px-3.5 py-2 font-medium">Grav.</th>
+          <th class="text-left px-3.5 py-2 font-medium">Status</th>
+          <th class="text-left px-3.5 py-2 font-medium">Responsável</th>
+          <th class="text-left px-3.5 py-2 font-medium">Prazo</th>
+          <th
+            class="text-right px-3.5 py-2 font-medium cursor-pointer select-none hover:text-nc-ink transition-colors"
+            (click)="toggleOrder()"
+          >
+            Aberta em {{ order() === 'DESC' ? '▼' : '▲' }}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (n of items(); track n.id) {
+          <tr
+            class="border-t border-nc-line hover:bg-nc-panel cursor-pointer"
+            [routerLink]="['/app/ncs', n.id]"
+          >
+            <td class="px-3.5 py-2.5 font-mono text-[11.5px]">{{ n.number }}</td>
+            <td class="px-3.5 py-2.5 max-w-[280px]">
+              <div class="truncate">{{ n.title }}</div>
+              @if (n.isOverdue) {
+                <div class="mt-1"><nc-overdue-badge /></div>
+              }
+            </td>
+            <td class="px-3.5 py-2.5 text-nc-ink-3">{{ typeLabel(n.type) }}</td>
+            <td class="px-3.5 py-2.5"><nc-severity-badge [severity]="n.severity" /></td>
+            <td class="px-3.5 py-2.5"><nc-status-badge [status]="n.status" /></td>
+            <td class="px-3.5 py-2.5 text-nc-ink-3">{{ n.assignedTo?.name ?? '—' }}</td>
+            <td class="px-3.5 py-2.5 font-mono text-[11.5px]">
+              @if (n.dueDateLabel) {
+                <span [class]="n.isOverdue ? 'text-nc-critical' : 'text-nc-ink-3'">{{ n.dueDateLabel }}</span>
+              } @else {
+                <span class="text-nc-muted">—</span>
+              }
+            </td>
+            <td class="px-3.5 py-2.5 text-right font-mono text-[11.5px] text-nc-ink-3">{{ n.openedAtLabel }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="8" class="px-3.5 py-10 text-center text-nc-ink-3 text-[12.5px]">
+              Nenhuma NC encontrada com esses filtros.
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <!-- Paginação -->
+    <div class="px-4 py-3 border-t border-nc-line flex items-center gap-4">
+      <span class="font-mono text-[11px] text-nc-ink-3 flex-1">
+        Página {{ currentPage() }} de {{ totalPages() }} · {{ total() }} registros
+      </span>
+      <div class="flex items-center gap-2">
+        <span class="font-mono text-[10px] text-nc-muted uppercase tracking-wider">Por página</span>
+        <select
+          [ngModel]="pageSize()"
+          (ngModelChange)="changePageSize($event)"
+          class="px-2 py-1 border border-nc-line-strong text-[11.5px] rounded-sm bg-nc-surface font-mono"
+        >
+          @for (opt of pageSizeOptions; track opt) {
+            <option [ngValue]="opt">{{ opt }}</option>
+          }
+        </select>
+      </div>
+      <div class="flex gap-1.5">
+        <button
+          type="button"
+          (click)="prevPage()"
+          [disabled]="!hasPrev()"
+          class="px-3 py-1.5 border border-nc-line text-[11.5px] rounded-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:enabled:bg-nc-panel"
+        >
+          ‹ Anterior
+        </button>
+        <button
+          type="button"
+          (click)="nextPage()"
+          [disabled]="!hasNext()"
+          class="px-3 py-1.5 border border-nc-line text-[11.5px] rounded-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:enabled:bg-nc-panel"
+        >
+          Próxima ›
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
