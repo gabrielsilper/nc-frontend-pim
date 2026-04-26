@@ -12,6 +12,7 @@ import {
   ResponseNonConformityDTO,
   STATUS_CA_LABEL,
   StatusCa,
+  UpdateCorrectiveActionDTO,
 } from '../../core/models/non-conformity.model';
 import { Profile, PROFILE_LABEL } from '../../core/models/profile.enum';
 import { ResponseUserDTO } from '../../core/models/user.model';
@@ -74,6 +75,11 @@ export class NcDetalhePage {
   newActionDesc = '';
   newActionDeadline = '';
   savingAction = signal(false);
+  actionError = signal('');
+
+  editingEvidenceId = signal<string | null>(null);
+  evidenceDraft = '';
+  updatingActionId = signal<string | null>(null);
 
   readonly StatusNc = StatusNc;
   readonly StatusCa = StatusCa;
@@ -303,26 +309,89 @@ export class NcDetalhePage {
     const n = this.nc();
     if (!n || !this.newActionDesc.trim() || !this.newActionDeadline) return;
 
-    const userId = this.currentUser()?.id;
-    if (!userId) return;
+    if (!n.assignedToId) {
+      this.actionError.set('Atribua um responsável à NC antes de criar ações.');
+      return;
+    }
 
     const dto: CreateCorrectiveActionDTO = {
       description: this.newActionDesc,
       status: StatusCa.PENDENTE,
       deadline: new Date(this.newActionDeadline).toISOString(),
-      assigneeId: userId,
     };
 
+    this.actionError.set('');
     this.savingAction.set(true);
     this.svc.createCorrectiveAction(n.id, dto).subscribe({
-      next: (ca) => {
-        this.actions.update((list) => [...list, ca]);
+      next: () => {
+        this.svc.correctiveActions(n.id).subscribe((list) => this.actions.set(list));
         this.newActionDesc = '';
         this.newActionDeadline = '';
         this.showActionForm.set(false);
         this.savingAction.set(false);
       },
-      error: () => this.savingAction.set(false),
+      error: (e: HttpErrorResponse) => {
+        this.actionError.set(e.error?.message ?? 'Erro ao criar ação corretiva.');
+        this.savingAction.set(false);
+      },
+    });
+  }
+
+  canEditAction(a: ResponseCorrectiveActionDTO): boolean {
+    return this.currentUser()?.id === a.assigneeId;
+  }
+
+  startEvidence(a: ResponseCorrectiveActionDTO) {
+    this.evidenceDraft = a.evidence ?? '';
+    this.editingEvidenceId.set(a.id);
+    this.actionError.set('');
+  }
+
+  cancelEvidence() {
+    this.editingEvidenceId.set(null);
+    this.evidenceDraft = '';
+  }
+
+  startAction(a: ResponseCorrectiveActionDTO) {
+    this.updateAction(a, { status: StatusCa.EM_ANDAMENTO });
+  }
+
+  saveEvidenceAndComplete(a: ResponseCorrectiveActionDTO) {
+    const text = this.evidenceDraft.trim();
+    if (text.length < 3) {
+      this.actionError.set('Evidência deve ter no mínimo 3 caracteres.');
+      return;
+    }
+    this.updateAction(a, { status: StatusCa.CONCLUIDA, evidence: text }, () => {
+      this.editingEvidenceId.set(null);
+      this.evidenceDraft = '';
+    });
+  }
+
+  reopenAction(a: ResponseCorrectiveActionDTO) {
+    this.updateAction(a, { status: StatusCa.EM_ANDAMENTO });
+  }
+
+  private updateAction(
+    a: ResponseCorrectiveActionDTO,
+    dto: UpdateCorrectiveActionDTO,
+    onSuccess?: () => void,
+  ) {
+    const n = this.nc();
+    if (!n) return;
+
+    this.actionError.set('');
+    this.updatingActionId.set(a.id);
+    this.svc.updateCorrectiveAction(n.id, a.id, dto).subscribe({
+      next: (updated) => {
+        this.actions.update((list) => list.map((x) => (x.id === updated.id ? updated : x)));
+        this.updatingActionId.set(null);
+        onSuccess?.();
+      },
+      error: (e: HttpErrorResponse) => {
+        this.actionError.set(e.error?.message ?? 'Erro ao atualizar ação corretiva.');
+        this.updatingActionId.set(null);
+      },
     });
   }
 

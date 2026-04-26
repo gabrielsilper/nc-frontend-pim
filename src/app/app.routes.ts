@@ -4,8 +4,11 @@ import { DashboardPage } from './pages/dashboard/dashboard.page';
 import { NcListaPage } from './pages/nc-lista/nc-lista.page';
 import { NcNovaPage } from './pages/nc-nova/nc-nova.page';
 import { NcDetalhePage } from './pages/nc-detalhe/nc-detalhe.page';
+import { MinhaFilaPage } from './pages/minha-fila/minha-fila.page';
 import { AppLayoutComponent } from './shared/components/app-layout/app-layout.component';
 import { authGuard } from './core/guards/auth.guard';
+import { roleGuard } from './core/guards/role.guard';
+import { Profile } from './core/models/profile.enum';
 
 export const routes: Routes = [
   { path: 'login', component: LoginPage },
@@ -14,7 +17,8 @@ export const routes: Routes = [
     canActivate: [authGuard],
     component: AppLayoutComponent,
     children: [
-      { path: 'dashboard', component: DashboardPage },
+      { path: 'dashboard', canActivate: [roleGuard([Profile.GESTOR])], component: DashboardPage },
+      { path: 'minha-fila', canActivate: [roleGuard([Profile.RESPONSAVEL])], component: MinhaFilaPage },
       { path: 'ncs/nova', component: NcNovaPage },
       { path: 'ncs/:id', component: NcDetalhePage },
       { path: 'ncs', component: NcListaPage },

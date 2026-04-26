@@ -56,7 +56,10 @@
         </thead>
         <tbody>
           @for (n of recent(); track n.id) {
-            <tr class="border-t border-nc-line hover:bg-nc-panel">
+            <tr
+              class="border-t border-nc-line hover:bg-nc-panel cursor-pointer"
+              [routerLink]="['/app/ncs', n.id]"
+            >
               <td class="px-3.5 py-2.5 font-mono text-[11.5px]">{{ n.number }}</td>
               <td class="px-3.5 py-2.5 max-w-[320px]">
                 <div class="truncate">{{ n.title }}</div>

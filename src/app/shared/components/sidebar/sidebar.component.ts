@@ -1,7 +1,7 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { PROFILE_LABEL } from '../../../core/models/profile.enum';
+import { Profile, PROFILE_LABEL } from '../../../core/models/profile.enum';
 
 @Component({
   selector: 'nc-sidebar',
@@ -13,6 +13,9 @@ export class SidebarComponent {
   private auth = inject(AuthService);
 
   user = this.auth.currentUser;
+
+  isGestor = computed(() => this.user()?.profile === Profile.GESTOR);
+  isResponsavel = computed(() => this.user()?.profile === Profile.RESPONSAVEL);
 
   initials = computed(() => {
     const name = this.user()?.name?.trim();

@@ -60,6 +60,7 @@ export interface FindNonConformitiesQuery {
   severity?: SeverityNc;
   type?: TypeNc;
   expired?: 0 | 1;
+  assignedToId?: string;
 }
 
 export interface UpdateNonConformityDTO {
@@ -89,6 +90,10 @@ export interface CreateCorrectiveActionDTO {
   description: string;
   status: StatusCa;
   deadline: string;
-  assigneeId: string;
+  evidence?: string;
+}
+
+export interface UpdateCorrectiveActionDTO {
+  status?: StatusCa;
   evidence?: string;
 }

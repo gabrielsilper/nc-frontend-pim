@@ -8,6 +8,7 @@ import {
   ResponseCorrectiveActionDTO,
   ResponseNonConformitiesPageDTO,
   ResponseNonConformityDTO,
+  UpdateCorrectiveActionDTO,
   UpdateNonConformityDTO,
 } from '../models/non-conformity.model';
 import { StatusNc } from '../models/status-nc.enum';
@@ -27,6 +28,7 @@ export class NonConformityService {
     if (query.severity !== undefined) params = params.set('severity', query.severity);
     if (query.type !== undefined) params = params.set('type', query.type);
     if (query.expired !== undefined) params = params.set('expired', query.expired);
+    if (query.assignedToId) params = params.set('assignedToId', query.assignedToId);
 
     return this.http.get<ResponseNonConformitiesPageDTO>(this.base, { params });
   }
@@ -61,5 +63,9 @@ export class NonConformityService {
 
   createCorrectiveAction(ncId: string, dto: CreateCorrectiveActionDTO) {
     return this.http.post<ResponseCorrectiveActionDTO>(`${this.base}/${ncId}/corrective-actions`, dto);
+  }
+
+  updateCorrectiveAction(ncId: string, caId: string, dto: UpdateCorrectiveActionDTO) {
+    return this.http.patch<ResponseCorrectiveActionDTO>(`${this.base}/${ncId}/corrective-actions/${caId}`, dto);
   }
 }

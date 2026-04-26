@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../core/services/auth.service';
+import { Profile } from '../../core/models/profile.enum';
 
 @Component({
   selector: 'app-login-page',
@@ -34,12 +35,23 @@ export class LoginPage {
     this.error.set(null);
 
     this.auth.login(this.form.getRawValue()).subscribe({
-      next: () => this.router.navigate(['/app/dashboard']),
+      next: () => this.router.navigate([this.routeForProfile()]),
       error: (e: HttpErrorResponse) => {
         this.error.set(this.resolveErrorMessage(e));
         this.loading.set(false);
       },
     });
+  }
+
+  private routeForProfile(): string {
+    switch (this.auth.currentUser()?.profile) {
+      case Profile.GESTOR:
+        return '/app/dashboard';
+      case Profile.RESPONSAVEL:
+        return '/app/minha-fila';
+      default:
+        return '/app/ncs';
+    }
   }
 
   private resolveErrorMessage(e: HttpErrorResponse): string {

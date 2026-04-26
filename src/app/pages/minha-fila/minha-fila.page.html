@@ -1,0 +1,74 @@
+<div class="h-14 bg-nc-surface border-b border-nc-line px-6 flex items-center gap-6 sticky top-0 z-10">
+  <div class="flex-1">
+    <div class="font-mono text-[10px] text-nc-muted uppercase tracking-widest mb-0.5">Pessoal</div>
+    <h1 class="text-[17px] font-semibold m-0 tracking-[-0.003em]">Minha fila</h1>
+  </div>
+  <div class="font-mono text-[11px] text-nc-ink-3">
+    {{ user()?.name }} · {{ items().length }} NCs atribuídas
+  </div>
+</div>
+
+<div class="p-6">
+  @if (overdue().length) {
+    <div class="mb-5">
+      <div class="font-mono text-[11px] font-semibold text-nc-critical uppercase tracking-widest mb-2.5 flex items-center gap-2">
+        <span class="w-2 h-2 bg-nc-critical rounded-full"></span>
+        Prazo vencido — ação imediata
+      </div>
+      <div class="grid gap-2.5">
+        @for (n of overdue(); track n.id) {
+          <a
+            [routerLink]="['/app/ncs', n.id]"
+            class="block p-3.5 bg-nc-surface border-l-[3px] border-nc-critical border border-nc-line rounded-sm hover:bg-nc-panel cursor-pointer"
+          >
+            <div class="flex items-baseline gap-3 mb-1">
+              <span class="font-mono text-[11px] text-nc-ink-3">{{ n.number }}</span>
+              <span class="text-[13px] font-medium flex-1 truncate">{{ n.title }}</span>
+              <nc-overdue-badge />
+            </div>
+            <div class="flex gap-3 items-center flex-wrap">
+              <nc-severity-badge [severity]="n.severity" />
+              <nc-status-badge [status]="n.status" />
+              <span class="font-mono text-[10.5px] text-nc-ink-3">
+                {{ n.processLine }} · prazo {{ n.dueDate | date:'dd/MM/yyyy' }}
+              </span>
+            </div>
+          </a>
+        }
+      </div>
+    </div>
+  }
+
+  <div>
+    <div class="font-mono text-[11px] font-semibold text-nc-ink-2 uppercase tracking-widest mb-2.5">
+      Próximos prazos
+    </div>
+    <div class="grid gap-2.5">
+      @for (n of upcoming(); track n.id) {
+        <a
+          [routerLink]="['/app/ncs', n.id]"
+          class="block p-3.5 bg-nc-surface border border-nc-line rounded-sm hover:bg-nc-panel cursor-pointer"
+        >
+          <div class="flex items-baseline gap-3 mb-1">
+            <span class="font-mono text-[11px] text-nc-ink-3">{{ n.number }}</span>
+            <span class="text-[13px] font-medium flex-1 truncate">{{ n.title }}</span>
+            <span class="font-mono text-[11px] text-nc-ink-3">
+              prazo {{ n.dueDate ? (n.dueDate | date:'dd/MM/yyyy') : '—' }}
+            </span>
+          </div>
+          <div class="flex gap-3 items-center flex-wrap">
+            <nc-severity-badge [severity]="n.severity" />
+            <nc-status-badge [status]="n.status" />
+            <span class="font-mono text-[10.5px] text-nc-ink-3">
+              {{ n.processLine }} · {{ n.department }}
+            </span>
+          </div>
+        </a>
+      } @empty {
+        <div class="p-8 bg-nc-surface border border-nc-line text-center text-[13px] text-nc-ink-3 rounded-sm">
+          Nenhuma NC na sua fila.
+        </div>
+      }
+    </div>
+  </div>
+</div>

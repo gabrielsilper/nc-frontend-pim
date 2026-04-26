@@ -268,15 +268,26 @@
       </div>
 
       @if (showActionForm()) {
-        <div class="px-5 py-4 border-b border-nc-line bg-nc-panel grid grid-cols-[1fr_140px_auto] gap-2 items-end">
-          <input [(ngModel)]="newActionDesc" placeholder="O que deve ser feito"
-            class="px-2.5 py-1.5 border border-nc-line-strong text-[12.5px] rounded-sm outline-none focus:border-nc-ink" />
-          <input [(ngModel)]="newActionDeadline" type="date" lang="pt-BR"
-            class="px-2.5 py-1.5 border border-nc-line-strong text-[12.5px] rounded-sm outline-none focus:border-nc-ink" />
-          <button (click)="addAction()" [disabled]="savingAction() || !newActionDesc.trim() || !newActionDeadline"
-            class="px-3 py-1.5 bg-nc-ink text-white text-[12px] font-medium rounded-sm disabled:opacity-50">
-            {{ savingAction() ? 'Salvando…' : 'Salvar' }}
-          </button>
+        <div class="px-5 py-4 border-b border-nc-line bg-nc-panel">
+          <div class="grid grid-cols-[1fr_140px_auto] gap-2 items-end">
+            <input [(ngModel)]="newActionDesc" placeholder="O que deve ser feito"
+              class="px-2.5 py-1.5 border border-nc-line-strong text-[12.5px] rounded-sm outline-none focus:border-nc-ink" />
+            <input [(ngModel)]="newActionDeadline" type="date" lang="pt-BR"
+              class="px-2.5 py-1.5 border border-nc-line-strong text-[12.5px] rounded-sm outline-none focus:border-nc-ink" />
+            <button (click)="addAction()"
+              [disabled]="savingAction() || !newActionDesc.trim() || !newActionDeadline || !nc()?.assignedToId"
+              class="px-3 py-1.5 bg-nc-ink text-white text-[12px] font-medium rounded-sm disabled:opacity-50">
+              {{ savingAction() ? 'Salvando…' : 'Salvar' }}
+            </button>
+          </div>
+          @if (!nc()?.assignedToId) {
+            <div class="mt-2 text-[11.5px] text-nc-muted">
+              Atribua um responsável à NC antes de criar ações — a ação será automaticamente atribuída a ele.
+            </div>
+          }
+          @if (actionError()) {
+            <div class="mt-2 text-[11.5px] text-nc-critical">{{ actionError() }}</div>
+          }
         </div>
       }
 
@@ -288,17 +299,34 @@
               <th class="px-3 py-2.5 text-left font-mono text-[9.5px] text-nc-muted uppercase tracking-wider">Ação</th>
               <th class="px-3 py-2.5 text-left font-mono text-[9.5px] text-nc-muted uppercase tracking-wider w-28">Prazo</th>
               <th class="px-3 py-2.5 text-left font-mono text-[9.5px] text-nc-muted uppercase tracking-wider w-32">Status</th>
+              <th class="px-3 py-2.5 text-right font-mono text-[9.5px] text-nc-muted uppercase tracking-wider w-48">Ações</th>
             </tr>
           </thead>
           <tbody>
             @for (a of actions(); track a.id) {
-              <tr class="border-b border-nc-line last:border-b-0 hover:bg-nc-panel">
+              <tr class="border-b border-nc-line last:border-b-0 hover:bg-nc-panel align-top">
                 <td class="px-5 py-3 font-mono text-nc-muted">{{ actionIndex(a.id) }}</td>
                 <td class="px-3 py-3">
                   <div class="text-nc-ink">{{ a.description }}</div>
-                  @if (a.evidence) {
+                  @if (a.evidence && editingEvidenceId() !== a.id) {
                     <div class="mt-1 px-2 py-1 bg-nc-ok/10 border-l-2 border-nc-ok text-[11.5px] text-nc-ink-2 font-mono">
                       EVIDÊNCIA › {{ a.evidence }}
+                    </div>
+                  }
+                  @if (canEditAction(a) && editingEvidenceId() === a.id) {
+                    <div class="mt-2 flex flex-col gap-2">
+                      <textarea [(ngModel)]="evidenceDraft" rows="3" placeholder="Descreva a evidência da conclusão"
+                        class="px-2.5 py-1.5 border border-nc-line-strong text-[12.5px] rounded-sm outline-none focus:border-nc-ink resize-none"></textarea>
+                      <div class="flex gap-2">
+                        <button (click)="saveEvidenceAndComplete(a)" [disabled]="updatingActionId() === a.id"
+                          class="px-3 py-1.5 bg-nc-ok text-white text-[11.5px] font-medium rounded-sm disabled:opacity-50">
+                          {{ updatingActionId() === a.id ? 'Salvando…' : 'Concluir com evidência' }}
+                        </button>
+                        <button (click)="cancelEvidence()" type="button"
+                          class="px-3 py-1.5 border border-nc-line-strong text-nc-ink-2 text-[11.5px] font-medium rounded-sm">
+                          Cancelar
+                        </button>
+                      </div>
                     </div>
                   }
                 </td>
@@ -318,10 +346,33 @@
                     </span>
                   }
                 </td>
+                <td class="px-3 py-3 text-right">
+                  @if (canEditAction(a) && editingEvidenceId() !== a.id) {
+                    @if (a.status === StatusCa.PENDENTE) {
+                      <button (click)="startAction(a)" [disabled]="updatingActionId() === a.id"
+                        class="px-2.5 py-1 bg-nc-ink text-white text-[11px] font-medium rounded-sm disabled:opacity-50">
+                        Iniciar
+                      </button>
+                    } @else if (a.status === StatusCa.EM_ANDAMENTO) {
+                      <button (click)="startEvidence(a)" [disabled]="updatingActionId() === a.id"
+                        class="px-2.5 py-1 bg-nc-ok text-white text-[11px] font-medium rounded-sm disabled:opacity-50">
+                        Concluir
+                      </button>
+                    } @else {
+                      <button (click)="reopenAction(a)" [disabled]="updatingActionId() === a.id"
+                        class="px-2.5 py-1 border border-nc-line-strong text-nc-ink-2 text-[11px] font-medium rounded-sm disabled:opacity-50">
+                        Reabrir
+                      </button>
+                    }
+                  }
+                </td>
               </tr>
             }
           </tbody>
         </table>
+        @if (actionError() && !showActionForm()) {
+          <div class="px-5 py-2 text-[11.5px] text-nc-critical">{{ actionError() }}</div>
+        }
       } @else {
         <div class="px-5 py-8 text-center text-[12.5px] text-nc-muted">Nenhuma ação cadastrada ainda.</div>
       }

@@ -169,55 +169,80 @@ Legenda de status: ✅ feito · 🟡 parcial · ❌ não feito
 
 ---
 
-## 7. Plano de ação — permitir associar a um responsável
+## 7. Plano de ação — atribuir automaticamente ao responsável da NC
 
-- Status FE: ❌  ·  BE: ✅ (schema já exige `assigneeId: uuid()` em
-  `src/schemas/create-corrective-action.schema.ts:19`)
+- Status FE: ✅  ·  BE: ✅
+- Regra: ao criar uma ação corretiva, o `assigneeId` é definido
+  **automaticamente** com o `assignedToId` da NC. Se a NC não tiver
+  responsável, o backend devolve 400 e o front bloqueia o botão.
+  Não há mais select de responsável da ação no formulário.
 
 **Frontend**
-- `nc-detalhe.page.html` (form de nova ação, ~ linhas 270-280):
-  adicionar `<select>` de `assigneeId` populado por
-  `UserService.listAll()`, valor obrigatório.
-- `nc-detalhe.page.ts:313` `addAction()`: enviar o `assigneeId`
-  selecionado em vez de `currentUser().id`.
+- `nc-detalhe.page.html` — botão "Salvar" desabilitado enquanto
+  `nc()?.assignedToId` for vazio + hint orientando a atribuir antes.
+- `nc-detalhe.page.ts` `addAction()` — não envia mais `assigneeId`
+  no payload e mostra erro do backend em `actionError()`.
 
 **Backend**
-- Nenhuma ação (schema já aceita).
+- `src/schemas/create-corrective-action.schema.ts` — campo
+  `assigneeId` removido.
+- `src/services/corrective-action.service.ts` `create()` — usa
+  `nonConformity.assignedToId`; lança `NcMissingAssigneeError`
+  (400) se vazio.
 
 ---
 
-## 8. Plano de ação não está sendo persistido / visualizado
+## 8. Plano de ação — persistência + responsável atualizando status/evidência
 
-- Status FE: 🟡  ·  BE: ❌ (bug)
+- Status FE: ✅  ·  BE: ✅
 
-**Sintoma**
-O responsável cria a ação e vê o item na lista (estado local),
-mas após recarregar a tela ou voltar para o detalhe da NC a
-lista volta vazia.
+**Bug original**
+`findbyNc()` chamava `repository.findBy({ nonConformity })`
+passando a entidade inteira; a coluna real é `nonConformityId`
+(`nc_id`), então a query nunca retornava registros.
 
-**Backend (causa provável)**
-- `src/services/corrective-action.service.ts` `findbyNc()` faz
-  `repository.findBy({ nonConformity })` passando a **entidade
-  inteira**. TypeORM resolve `findBy` pelas colunas (na entidade
-  a coluna real é `nonConformityId` / `nc_id`), então a query
-  nunca retorna registros.
-- **Correção**: trocar para
-  `findBy({ nonConformityId })` (string UUID) ou usar
-  `find({ where: { nonConformityId }, relations: ['assignee'] })`
-  para também devolver o nome do responsável da ação.
-- Confirmar via psql que os registros entraram em
-  `corrective_actions`
-  (`SELECT * FROM corrective_actions WHERE nc_id = '<id>'`) — o
-  `create()` aparenta gravar via relação, mas vale a checagem.
+**Backend (corrigido)**
+- `src/services/corrective-action.service.ts` `findbyNc()` agora
+  usa `find({ where: { nonConformityId }, relations: ['assignee'], order: { createdAt: 'ASC' } })`.
+- Novo método `update(caId, userId, dto)` no mesmo service:
+  - Lança `CorrectiveActionNotFoundError` (404) se a CA não existir.
+  - Lança `CorrectiveActionForbiddenError` (403) se
+    `userId !== action.assigneeId`.
+  - Para passar a `CONCLUIDA`, exige `evidence` (vinda no dto ou já
+    persistida); caso contrário `CorrectiveActionMissingEvidenceError`
+    (400).
+  - Seta `finishedAt = new Date()` ao concluir; limpa ao reabrir.
+- Novo schema `src/schemas/update-corrective-action.schema.ts`
+  (status/evidence opcionais, `refine` exige ao menos um).
+- Novo método `updateCorrectiveAction()` em
+  `src/controllers/non-conformity.controller.ts` que extrai
+  `sub` de `req.payload` para validar autorização no service.
+- Nova rota `PATCH /non-conformities/:ncId/corrective-actions/:caId`
+  em `src/routes/non-conformity.routes.ts` (sem
+  `validateProfileAuth` — autorização é por ser o assignee).
+- Erros novos registrados em `errorHandler`:
+  `CorrectiveActionNotFoundError` (404),
+  `CorrectiveActionForbiddenError` (403),
+  `CorrectiveActionMissingEvidenceError` (400),
+  `NcMissingAssigneeError` (400).
 
 **Frontend**
-- Após `createCorrectiveAction` retornar, refazer
-  `correctiveActions(ncId)` em vez de só
-  `actions.update(list => [...list, ca])` — garante que o que
-  está na tela é o que está no banco.
-- Tratar erro do POST de forma visível (hoje
-  `error: () => savingAction.set(false)` não mostra nada ao
-  usuário).
+- `addAction()` agora refaz `correctiveActions(ncId)` no `next` —
+  garante que a tela reflete o banco e dispensa o `actions.update`
+  otimista.
+- Erro do POST exibido no `actionError()` (signal de mensagem
+  visível).
+- Novo método `updateCorrectiveAction(ncId, caId, dto)` em
+  `src/app/core/services/non-conformity.service.ts`.
+- `nc-detalhe.page.ts` ganhou:
+  - `canEditAction(a)` — `currentUser()?.id === a.assigneeId`.
+  - `startAction(a)` (PENDENTE → EM_ANDAMENTO).
+  - `startEvidence(a)` + `saveEvidenceAndComplete(a)` — abre
+    textarea inline e conclui com evidência.
+  - `reopenAction(a)` (CONCLUIDA → EM_ANDAMENTO).
+- `nc-detalhe.page.html` — coluna "Ações" na tabela de ações
+  visível só para o assignee; demais usuários veem read-only.
+  Evidência exibida como hoje (linha verde abaixo da descrição).
 
 ---
 
