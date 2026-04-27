@@ -90,6 +90,7 @@
           <th class="text-left px-3.5 py-2 font-medium">Tipo</th>
           <th class="text-left px-3.5 py-2 font-medium">Grav.</th>
           <th class="text-left px-3.5 py-2 font-medium">Status</th>
+          <th class="text-left px-3.5 py-2 font-medium">Responsável</th>
           <th class="text-left px-3.5 py-2 font-medium">Prazo</th>
           <th
             class="text-right px-3.5 py-2 font-medium cursor-pointer select-none hover:text-nc-ink transition-colors"
@@ -115,6 +116,15 @@
             <td class="px-3.5 py-2.5 text-nc-ink-3">{{ typeLabel(n.type) }}</td>
             <td class="px-3.5 py-2.5"><nc-severity-badge [severity]="n.severity" /></td>
             <td class="px-3.5 py-2.5"><nc-status-badge [status]="n.status" /></td>
+            <td class="px-3.5 py-2.5">
+              @if (n.assignedTo; as a) {
+                <div class="flex items-center gap-2 min-w-0">
+                  <span class="truncate text-nc-ink">{{ a.name }}</span>
+                </div>
+              } @else {
+                <span class="text-nc-muted">—</span>
+              }
+            </td>
             <td class="px-3.5 py-2.5 font-mono text-[11.5px]">
               @if (n.dueDateLabel) {
                 <span [class]="n.isOverdue ? 'text-nc-critical' : 'text-nc-ink-3'">{{ n.dueDateLabel }}</span>
@@ -126,7 +136,7 @@
           </tr>
         } @empty {
           <tr>
-            <td colspan="7" class="px-3.5 py-10 text-center text-nc-ink-3 text-[12.5px]">
+            <td colspan="8" class="px-3.5 py-10 text-center text-nc-ink-3 text-[12.5px]">
               Nenhuma NC encontrada com esses filtros.
             </td>
           </tr>

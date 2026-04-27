@@ -1,7 +1,7 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { tap } from 'rxjs';
+import { switchMap, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { LoginDTO, ResponseTokensDTO } from '../models/auth.model';
 import { AuthUserDTO, ResponseUserDTO } from '../models/user.model';
@@ -32,8 +32,8 @@ export class AuthService {
         tap((response) => {
           localStorage.setItem(ACCESS_TOKEN_KEY, response.accessToken);
           localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken);
-          this.currentUser.set(response.user);
         }),
+        switchMap(() => this.me()),
       );
   }
 
