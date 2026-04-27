@@ -19,7 +19,7 @@
   </div>
 
   <div class="flex items-center gap-2 shrink-0">
-    @if (isResponsavel()) {
+    @if (canEditNc()) {
       <button (click)="openEdit()"
         class="flex items-center gap-1.5 px-3 py-1.5 border border-nc-line-strong text-[12px] rounded-sm hover:bg-nc-panel">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
@@ -235,11 +235,11 @@
         }
       </div>
 
-      @if (isResponsavel()) {
+      @if (canEditRootCause()) {
         <textarea rows="3" [(ngModel)]="rootCause"
           placeholder="Descreva a causa raiz identificada (obrigatório para encerrar)…"
           class="w-full px-3 py-2 border border-nc-line-strong text-[13px] rounded-sm outline-none focus:border-nc-ink resize-none mb-3"></textarea>
-        <button (click)="saveRootCause()" [disabled]="savingRootCause() || !rootCause.trim()"
+        <button (click)="saveRootCause()" [disabled]="!canSaveRootCause()"
           class="px-3 py-1.5 bg-nc-ink text-white text-[12px] font-medium rounded-sm hover:opacity-90 disabled:opacity-50">
           {{ savingRootCause() ? 'Salvando…' : 'Salvar causa raiz' }}
         </button>
@@ -288,7 +288,7 @@
                 (change)="onActionDeadlinePicked(actionDeadlinePicker.value)" />
             </div>
             <button (click)="addAction()"
-              [disabled]="savingAction() || !canSaveAction()"
+              [disabled]="savingAction() || !canSaveAction() || !canManageActionPlan()"
               class="px-3 py-1.5 bg-nc-ink text-white text-[12px] font-medium rounded-sm disabled:opacity-50">
               {{ savingAction() ? 'Salvando…' : 'Salvar' }}
             </button>
@@ -403,7 +403,7 @@
         @if (isOverdue()) { <nc-overdue-badge /> }
       </div>
       <div class="p-4">
-        @if (isGestor()) {
+        @if (canEditDueDate()) {
           <div class="relative">
             <input [ngModel]="dueDateLocal" (ngModelChange)="onNcDueDateChange($event)" (blur)="saveDueDate()"
               type="text" inputmode="numeric" placeholder="dd/MM/aaaa"
@@ -428,7 +428,7 @@
           }
         } @else if (n.dueDate) {
           <div class="text-[12.5px] font-mono font-semibold" [class]="isOverdue() ? 'text-nc-critical' : 'text-nc-ink'">
-            {{ n.dueDate | date:'dd/MM/yyyy HH:mm' }}
+            {{ n.dueDate | date:(isNcClosed() ? 'dd/MM/yyyy' : 'dd/MM/yyyy HH:mm') }}
           </div>
         } @else {
           <div class="text-[12px] text-nc-muted italic">Não definido</div>
@@ -455,7 +455,7 @@
                 </div>
               </div>
             </div>
-            @if (isGestor()) {
+            @if (canEditAssignment()) {
               <button (click)="openAssign()"
                 class="p-1 text-nc-muted hover:text-nc-ink transition-colors"
                 title="Editar responsável">
@@ -469,7 +469,7 @@
         } @else {
           <div class="flex items-center justify-between">
             <div class="text-[12px] text-nc-muted italic">Não atribuída</div>
-            @if (isGestor()) {
+            @if (canEditAssignment()) {
               <button (click)="openAssign()"
                 class="px-2.5 py-1 bg-nc-ink text-white text-[11px] font-medium rounded-sm hover:opacity-90">
                 Atribuir

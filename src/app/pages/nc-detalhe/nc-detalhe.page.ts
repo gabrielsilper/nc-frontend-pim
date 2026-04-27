@@ -100,17 +100,29 @@ export class NcDetalhePage {
 
   currentUser = this.auth.currentUser;
 
+  isNcClosed = computed(() => this.nc()?.status === StatusNc.ENCERRADA);
   isGestor = computed(() => this.currentUser()?.profile === Profile.GESTOR);
   isResponsavel = computed(
     () =>
       this.currentUser()?.profile === Profile.RESPONSAVEL ||
       this.currentUser()?.profile === Profile.GESTOR,
   );
+  canEditNc = computed(() => this.isResponsavel() && !this.isNcClosed());
+  canEditRootCause = computed(() => this.isResponsavel() && !this.isNcClosed());
+  canEditDueDate = computed(() => this.isGestor() && !this.isNcClosed());
+  canEditAssignment = computed(() => this.isGestor() && !this.isNcClosed());
   canManageActionPlan = computed(
     () =>
-      this.currentUser()?.profile === Profile.GESTOR ||
-      (!!this.nc()?.assignedTo?.id && this.nc()?.assignedTo?.id === this.currentUser()?.id),
+      !this.isNcClosed() &&
+      (this.currentUser()?.profile === Profile.GESTOR ||
+        (!!this.nc()?.assignedTo?.id && this.nc()?.assignedTo?.id === this.currentUser()?.id)),
   );
+  canSaveRootCause = computed(() => {
+    if (!this.canEditRootCause() || this.savingRootCause()) return false;
+    const current = this.rootCause.trim();
+    const saved = this.nc()?.rootCause?.trim() ?? '';
+    return current.length > 0 && current !== saved;
+  });
 
   allowed = computed(() => {
     const s = this.nc()?.status;
@@ -170,9 +182,7 @@ export class NcDetalhePage {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.svc.byId(id).subscribe((n) => {
-        this.nc.set(n);
-        this.rootCause = n.rootCause ?? '';
-        this.dueDateLocal = isoToBrDateInput(n.dueDate);
+        this.applyNcState(n);
       });
       this.svc.correctiveActions(id).subscribe((a) => this.actions.set(a));
     }
@@ -188,7 +198,7 @@ export class NcDetalhePage {
 
   openEdit() {
     const n = this.nc();
-    if (!n) return;
+    if (!n || !this.canEditNc()) return;
     this.editForm.setValue({
       title: n.title,
       description: n.description,
@@ -206,6 +216,8 @@ export class NcDetalhePage {
   }
 
   saveEdit() {
+    if (!this.canEditNc()) return;
+
     this.editForm.markAllAsTouched();
     if (this.editForm.invalid) return;
 
@@ -220,7 +232,7 @@ export class NcDetalhePage {
 
     this.svc.update(n.id, { title, description, severity, type, processLine, department }).subscribe({
       next: (updated) => {
-        this.nc.set(updated);
+        this.applyNcState(updated);
         this.showEdit.set(false);
         this.loading.set(false);
       },
@@ -235,12 +247,12 @@ export class NcDetalhePage {
 
   saveRootCause() {
     const n = this.nc();
-    if (!n || !this.rootCause.trim()) return;
+    if (!n || !this.canSaveRootCause()) return;
 
     this.savingRootCause.set(true);
     this.svc.update(n.id, { rootCause: this.rootCause }).subscribe({
       next: (updated) => {
-        this.nc.set(updated);
+        this.applyNcState(updated);
         this.savingRootCause.set(false);
       },
       error: () => this.savingRootCause.set(false),
@@ -249,7 +261,7 @@ export class NcDetalhePage {
 
   saveDueDate() {
     const n = this.nc();
-    if (!n || !this.dueDateLocal.trim()) return;
+    if (!n || !this.canEditDueDate() || !this.dueDateLocal.trim()) return;
 
     const dueDate = brDateToDateOnly(this.dueDateLocal);
     if (!dueDate) {
@@ -261,8 +273,7 @@ export class NcDetalhePage {
     this.savingDueDate.set(true);
     this.svc.updateDueDate(n.id, dueDate).subscribe({
       next: (updated) => {
-        this.nc.set(updated);
-        this.dueDateLocal = isoToBrDateInput(updated.dueDate);
+        this.applyNcState(updated);
         this.savingDueDate.set(false);
       },
       error: (e: HttpErrorResponse) => {
@@ -292,6 +303,7 @@ export class NcDetalhePage {
   }
 
   openAssign() {
+    if (!this.canEditAssignment()) return;
     this.selectedUserId = this.nc()?.assignedTo?.id ?? '';
     this.assignDueDate = isoToBrDateInput(this.nc()?.dueDate);
     this.assignError.set('');
@@ -312,7 +324,7 @@ export class NcDetalhePage {
     const n = this.nc();
     const dueDate = brDateToIsoString(this.assignDueDate);
 
-    if (!n || !this.selectedUserId || !dueDate) {
+    if (!this.canEditAssignment() || !n || !this.selectedUserId || !dueDate) {
       this.assignError.set('Informe um responsável e um prazo válido antes de confirmar.');
       return;
     }
@@ -321,8 +333,7 @@ export class NcDetalhePage {
     this.assignLoading.set(true);
     this.svc.assign(n.id, { assignedToId: this.selectedUserId, dueDate }).subscribe({
       next: (updated) => {
-        this.nc.set(updated);
-        this.dueDateLocal = isoToBrDateInput(updated.dueDate);
+        this.applyNcState(updated);
         this.assignLoading.set(false);
         this.showAssignForm.set(false);
         this.selectedUserId = '';
@@ -338,6 +349,11 @@ export class NcDetalhePage {
   addAction() {
     const n = this.nc();
     const deadline = brDateToIsoString(this.newActionDeadline);
+
+    if (!this.canManageActionPlan()) {
+      this.actionError.set('NC encerrada nao permite alterar o plano de ação.');
+      return;
+    }
 
     if (!n || !this.newActionDesc.trim() || !deadline) {
       this.actionError.set('Informe uma descrição e um prazo válido no formato dd/MM/aaaa.');
@@ -377,6 +393,7 @@ export class NcDetalhePage {
   }
 
   startEvidence(a: ResponseCorrectiveActionDTO) {
+    if (!this.canManageActionPlan()) return;
     this.evidenceDraft = a.evidence ?? '';
     this.editingEvidenceId.set(a.id);
     this.actionError.set('');
@@ -388,10 +405,12 @@ export class NcDetalhePage {
   }
 
   startAction(a: ResponseCorrectiveActionDTO) {
+    if (!this.canManageActionPlan()) return;
     this.updateAction(a, { status: StatusCa.EM_ANDAMENTO });
   }
 
   saveEvidenceAndComplete(a: ResponseCorrectiveActionDTO) {
+    if (!this.canManageActionPlan()) return;
     const text = this.evidenceDraft.trim();
     if (text.length < 3) {
       this.actionError.set('Evidência deve ter no mínimo 3 caracteres.');
@@ -404,6 +423,7 @@ export class NcDetalhePage {
   }
 
   reopenAction(a: ResponseCorrectiveActionDTO) {
+    if (!this.canManageActionPlan()) return;
     this.updateAction(a, { status: StatusCa.EM_ANDAMENTO });
   }
 
@@ -441,6 +461,7 @@ export class NcDetalhePage {
   }
 
   onNcDueDateChange(value: string) {
+    if (!this.canEditDueDate()) return;
     this.dueDateLocal = applyBrDateMask(value);
     this.dueDateError.set('');
   }
@@ -456,6 +477,7 @@ export class NcDetalhePage {
   }
 
   onNcDueDatePicked(value: string) {
+    if (!this.canEditDueDate()) return;
     this.dueDateLocal = isoToBrDateInput(value);
     this.dueDateError.set('');
     this.saveDueDate();
@@ -467,10 +489,28 @@ export class NcDetalhePage {
   }
 
   canConfirmAssign(): boolean {
-    return !!this.selectedUserId && isValidBrDate(this.assignDueDate);
+    return this.canEditAssignment() && !!this.selectedUserId && isValidBrDate(this.assignDueDate);
   }
 
   canSaveAction(): boolean {
-    return !!this.newActionDesc.trim() && !!this.nc()?.assignedTo && isValidBrDate(this.newActionDeadline);
+    return (
+      this.canManageActionPlan() &&
+      !!this.newActionDesc.trim() &&
+      !!this.nc()?.assignedTo &&
+      isValidBrDate(this.newActionDeadline)
+    );
+  }
+
+  private applyNcState(n: ResponseNonConformityDTO) {
+    this.nc.set(n);
+    this.rootCause = n.rootCause ?? '';
+    this.dueDateLocal = isoToBrDateInput(n.dueDate);
+
+    if (n.status === StatusNc.ENCERRADA) {
+      this.showEdit.set(false);
+      this.showAssignForm.set(false);
+      this.showActionForm.set(false);
+      this.cancelEvidence();
+    }
   }
 }
