@@ -275,12 +275,12 @@
             <input [(ngModel)]="newActionDeadline" type="date" lang="pt-BR"
               class="px-2.5 py-1.5 border border-nc-line-strong text-[12.5px] rounded-sm outline-none focus:border-nc-ink" />
             <button (click)="addAction()"
-              [disabled]="savingAction() || !newActionDesc.trim() || !newActionDeadline || !nc()?.assignedToId"
+              [disabled]="savingAction() || !newActionDesc.trim() || !newActionDeadline || !nc()?.assignedTo"
               class="px-3 py-1.5 bg-nc-ink text-white text-[12px] font-medium rounded-sm disabled:opacity-50">
               {{ savingAction() ? 'Salvando…' : 'Salvar' }}
             </button>
           </div>
-          @if (!nc()?.assignedToId) {
+          @if (!nc()?.assignedTo) {
             <div class="mt-2 text-[11.5px] text-nc-muted">
               Atribua um responsável à NC antes de criar ações — a ação será automaticamente atribuída a ele.
             </div>
@@ -413,7 +413,7 @@
         <div class="font-mono text-[9.5px] text-nc-muted uppercase tracking-widest">Atribuição</div>
       </div>
       <div class="p-4">
-        @if (assignee(); as a) {
+        @if (n.assignedTo; as a) {
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2.5">
               <div class="w-8 h-8 rounded-full bg-nc-ink flex items-center justify-center text-white text-[12px] font-semibold shrink-0">
@@ -479,7 +479,7 @@
         <div class="font-mono text-[9.5px] text-nc-muted uppercase tracking-widest">Aberta por</div>
       </div>
       <div class="p-4">
-        @if (creator(); as c) {
+        @if (n.createdBy; as c) {
           <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-full bg-nc-ink-2 flex items-center justify-center text-white text-[12px] font-semibold shrink-0">
               {{ c.name.charAt(0).toUpperCase() }}
@@ -492,7 +492,7 @@
             </div>
           </div>
         } @else {
-          <div class="text-[12px] text-nc-muted italic">Carregando…</div>
+          <div class="text-[12px] text-nc-muted italic">Sem informações de criador.</div>
         }
       </div>
     </section>

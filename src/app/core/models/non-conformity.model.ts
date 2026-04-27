@@ -1,6 +1,13 @@
+import { Profile } from './profile.enum';
 import { SeverityNc } from './severity-nc.enum';
 import { StatusNc } from './status-nc.enum';
 import { TypeNc } from './type-nc.enum';
+
+export interface EmbeddedUserDTO {
+  id: string;
+  name: string;
+  profile: Profile;
+}
 
 export enum StatusCa {
   PENDENTE = 0,
@@ -25,9 +32,8 @@ export interface ResponseNonConformityDTO {
   processLine: string;
   department: string;
   rootCause?: string;
-  createdById: string;
-  assignedToId?: string;
-  assignedTo?: { id: string; name: string };
+  createdBy: EmbeddedUserDTO;
+  assignedTo: EmbeddedUserDTO | null;
   openedAt: string;
   dueDate?: string;
   closedAt?: string | null;
@@ -80,7 +86,7 @@ export interface ResponseCorrectiveActionDTO {
   deadline: string;
   evidence?: string;
   nonConformityId: string;
-  assigneeId: string;
+  assignee: EmbeddedUserDTO;
   finishedAt?: string;
   createdAt: string;
   updatedAt: string;

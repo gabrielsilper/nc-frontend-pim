@@ -53,8 +53,6 @@ export class NcDetalhePage {
 
   nc = signal<ResponseNonConformityDTO | null>(null);
   actions = signal<ResponseCorrectiveActionDTO[]>([]);
-  creator = signal<ResponseUserDTO | null>(null);
-  assignee = signal<ResponseUserDTO | null>(null);
 
   showEdit = signal(false);
   showActionForm = signal(false);
@@ -160,12 +158,6 @@ export class NcDetalhePage {
         this.nc.set(n);
         this.rootCause = n.rootCause ?? '';
         this.dueDateLocal = n.dueDate ? n.dueDate.slice(0, 10) : '';
-
-        this.userSvc.byId(n.createdById).subscribe((u) => this.creator.set(u));
-
-        if (n.assignedToId) {
-          this.userSvc.byId(n.assignedToId).subscribe((u) => this.assignee.set(u));
-        }
       });
       this.svc.correctiveActions(id).subscribe((a) => this.actions.set(a));
     }
@@ -274,7 +266,7 @@ export class NcDetalhePage {
   }
 
   openAssign() {
-    this.selectedUserId = this.assignee()?.id ?? '';
+    this.selectedUserId = this.nc()?.assignedTo?.id ?? '';
     this.userSvc.listAll().subscribe((list) => {
       this.users.set(list);
       this.showAssignForm.set(true);
@@ -294,12 +286,9 @@ export class NcDetalhePage {
     this.svc.assign(n.id, this.selectedUserId).subscribe({
       next: (updated) => {
         this.nc.set(updated);
-        this.userSvc.byId(this.selectedUserId).subscribe((u) => {
-          this.assignee.set(u);
-          this.assignLoading.set(false);
-          this.showAssignForm.set(false);
-          this.selectedUserId = '';
-        });
+        this.assignLoading.set(false);
+        this.showAssignForm.set(false);
+        this.selectedUserId = '';
       },
       error: () => this.assignLoading.set(false),
     });
@@ -309,7 +298,7 @@ export class NcDetalhePage {
     const n = this.nc();
     if (!n || !this.newActionDesc.trim() || !this.newActionDeadline) return;
 
-    if (!n.assignedToId) {
+    if (!n.assignedTo) {
       this.actionError.set('Atribua um responsável à NC antes de criar ações.');
       return;
     }
@@ -338,7 +327,7 @@ export class NcDetalhePage {
   }
 
   canEditAction(a: ResponseCorrectiveActionDTO): boolean {
-    return this.currentUser()?.id === a.assigneeId;
+    return this.currentUser()?.id === a.assignee.id;
   }
 
   startEvidence(a: ResponseCorrectiveActionDTO) {
