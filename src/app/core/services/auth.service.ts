@@ -1,7 +1,7 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { switchMap, tap } from 'rxjs';
+import { map, switchMap, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { LoginDTO, ResponseTokensDTO } from '../models/auth.model';
 import { AuthUserDTO, ResponseUserDTO } from '../models/user.model';
@@ -49,7 +49,12 @@ export class AuthService {
     if (!token) return;
 
     const payload = this.decodeToken(token);
-    if (!payload || this.isExpired(payload)) {
+    if (!payload) {
+      this.logout();
+      return;
+    }
+
+    if (this.isExpired(payload) && !this.getRefreshToken()) {
       this.logout();
       return;
     }
@@ -59,6 +64,24 @@ export class AuthService {
 
   getAccessToken(): string | null {
     return localStorage.getItem(ACCESS_TOKEN_KEY);
+  }
+
+  getRefreshToken(): string | null {
+    return localStorage.getItem(REFRESH_TOKEN_KEY);
+  }
+
+  refreshTokens() {
+    return this.http
+      .post<ResponseTokensDTO>(`${environment.apiUrl}/auth/refresh`, {
+        refreshToken: this.getRefreshToken(),
+      })
+      .pipe(
+        tap((response) => {
+          localStorage.setItem(ACCESS_TOKEN_KEY, response.accessToken);
+          localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken);
+        }),
+        map((response) => response.accessToken),
+      );
   }
 
   me() {
