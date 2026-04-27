@@ -79,6 +79,11 @@ export interface UpdateNonConformityDTO {
   rootCause?: string;
 }
 
+export interface AssignNonConformityDTO {
+  assignedToId: string;
+  dueDate: string;
+}
+
 export interface ResponseCorrectiveActionDTO {
   id: string;
   description: string;

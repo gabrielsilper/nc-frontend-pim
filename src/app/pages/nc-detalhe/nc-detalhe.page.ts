@@ -22,6 +22,13 @@ import { TypeNc, TYPE_LABEL } from '../../core/models/type-nc.enum';
 import { SeverityBadgeComponent } from '../../shared/components/severity-badge/severity-badge.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
 import { OverdueBadgeComponent } from '../../shared/components/overdue-badge/overdue-badge.component';
+import {
+  applyBrDateMask,
+  brDateToDateOnly,
+  brDateToIsoString,
+  isValidBrDate,
+  isoToBrDateInput,
+} from '../../core/utils/br-date-input.util';
 
 const TIMELINE_STEPS: StatusNc[] = [
   StatusNc.ABERTA,
@@ -61,11 +68,14 @@ export class NcDetalhePage {
   savingRootCause = signal(false);
   savingDueDate = signal(false);
   assignLoading = signal(false);
+  assignError = signal('');
   transitionError = signal('');
   editError = signal('');
+  dueDateError = signal('');
 
   users = signal<ResponseUserDTO[]>([]);
   selectedUserId = '';
+  assignDueDate = '';
 
   rootCause = '';
   dueDateLocal = '';
@@ -157,7 +167,7 @@ export class NcDetalhePage {
       this.svc.byId(id).subscribe((n) => {
         this.nc.set(n);
         this.rootCause = n.rootCause ?? '';
-        this.dueDateLocal = n.dueDate ? n.dueDate.slice(0, 10) : '';
+        this.dueDateLocal = isoToBrDateInput(n.dueDate);
       });
       this.svc.correctiveActions(id).subscribe((a) => this.actions.set(a));
     }
@@ -234,15 +244,26 @@ export class NcDetalhePage {
 
   saveDueDate() {
     const n = this.nc();
-    if (!n || !this.dueDateLocal) return;
+    if (!n || !this.dueDateLocal.trim()) return;
 
+    const dueDate = brDateToDateOnly(this.dueDateLocal);
+    if (!dueDate) {
+      this.dueDateError.set('Informe uma data válida no formato dd/MM/aaaa.');
+      return;
+    }
+
+    this.dueDateError.set('');
     this.savingDueDate.set(true);
-    this.svc.updateDueDate(n.id, this.dueDateLocal).subscribe({
+    this.svc.updateDueDate(n.id, dueDate).subscribe({
       next: (updated) => {
         this.nc.set(updated);
+        this.dueDateLocal = isoToBrDateInput(updated.dueDate);
         this.savingDueDate.set(false);
       },
-      error: () => this.savingDueDate.set(false),
+      error: (e: HttpErrorResponse) => {
+        this.dueDateError.set(e.error?.message ?? 'Erro ao atualizar prazo.');
+        this.savingDueDate.set(false);
+      },
     });
   }
 
@@ -267,6 +288,8 @@ export class NcDetalhePage {
 
   openAssign() {
     this.selectedUserId = this.nc()?.assignedTo?.id ?? '';
+    this.assignDueDate = isoToBrDateInput(this.nc()?.dueDate);
+    this.assignError.set('');
     this.userSvc.listAll().subscribe((list) => {
       this.users.set(list);
       this.showAssignForm.set(true);
@@ -276,27 +299,45 @@ export class NcDetalhePage {
   closeAssign() {
     this.showAssignForm.set(false);
     this.selectedUserId = '';
+    this.assignDueDate = '';
+    this.assignError.set('');
   }
 
   confirmAssign() {
     const n = this.nc();
-    if (!n || !this.selectedUserId) return;
+    const dueDate = brDateToIsoString(this.assignDueDate);
 
+    if (!n || !this.selectedUserId || !dueDate) {
+      this.assignError.set('Informe um responsável e um prazo válido antes de confirmar.');
+      return;
+    }
+
+    this.assignError.set('');
     this.assignLoading.set(true);
-    this.svc.assign(n.id, this.selectedUserId).subscribe({
+    this.svc.assign(n.id, { assignedToId: this.selectedUserId, dueDate }).subscribe({
       next: (updated) => {
         this.nc.set(updated);
+        this.dueDateLocal = isoToBrDateInput(updated.dueDate);
         this.assignLoading.set(false);
         this.showAssignForm.set(false);
         this.selectedUserId = '';
+        this.assignDueDate = '';
       },
-      error: () => this.assignLoading.set(false),
+      error: (e: HttpErrorResponse) => {
+        this.assignError.set(e.error?.message ?? 'Erro ao atribuir responsável.');
+        this.assignLoading.set(false);
+      },
     });
   }
 
   addAction() {
     const n = this.nc();
-    if (!n || !this.newActionDesc.trim() || !this.newActionDeadline) return;
+    const deadline = brDateToIsoString(this.newActionDeadline);
+
+    if (!n || !this.newActionDesc.trim() || !deadline) {
+      this.actionError.set('Informe uma descrição e um prazo válido no formato dd/MM/aaaa.');
+      return;
+    }
 
     if (!n.assignedTo) {
       this.actionError.set('Atribua um responsável à NC antes de criar ações.');
@@ -306,7 +347,7 @@ export class NcDetalhePage {
     const dto: CreateCorrectiveActionDTO = {
       description: this.newActionDesc,
       status: StatusCa.PENDENTE,
-      deadline: new Date(this.newActionDeadline).toISOString(),
+      deadline,
     };
 
     this.actionError.set('');
@@ -387,5 +428,44 @@ export class NcDetalhePage {
   actionIndex(id: string): string {
     const idx = this.actions().findIndex((a) => a.id === id);
     return `CA-${String(idx + 1).padStart(2, '0')}`;
+  }
+
+  onAssignDueDateChange(value: string) {
+    this.assignDueDate = applyBrDateMask(value);
+    this.assignError.set('');
+  }
+
+  onNcDueDateChange(value: string) {
+    this.dueDateLocal = applyBrDateMask(value);
+    this.dueDateError.set('');
+  }
+
+  onActionDeadlineChange(value: string) {
+    this.newActionDeadline = applyBrDateMask(value);
+    this.actionError.set('');
+  }
+
+  onAssignDueDatePicked(value: string) {
+    this.assignDueDate = isoToBrDateInput(value);
+    this.assignError.set('');
+  }
+
+  onNcDueDatePicked(value: string) {
+    this.dueDateLocal = isoToBrDateInput(value);
+    this.dueDateError.set('');
+    this.saveDueDate();
+  }
+
+  onActionDeadlinePicked(value: string) {
+    this.newActionDeadline = isoToBrDateInput(value);
+    this.actionError.set('');
+  }
+
+  canConfirmAssign(): boolean {
+    return !!this.selectedUserId && isValidBrDate(this.assignDueDate);
+  }
+
+  canSaveAction(): boolean {
+    return !!this.newActionDesc.trim() && !!this.nc()?.assignedTo && isValidBrDate(this.newActionDeadline);
   }
 }

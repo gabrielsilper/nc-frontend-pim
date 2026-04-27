@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import {
+  AssignNonConformityDTO,
   CreateCorrectiveActionDTO,
   CreateNonConformityDTO,
   FindNonConformitiesQuery,
@@ -49,8 +50,8 @@ export class NonConformityService {
     return this.http.patch<ResponseNonConformityDTO>(`${this.base}/${id}/status/${status}`, {});
   }
 
-  assign(id: string, userId: string) {
-    return this.http.patch<ResponseNonConformityDTO>(`${this.base}/${id}/assign/${userId}`, {});
+  assign(id: string, dto: AssignNonConformityDTO) {
+    return this.http.patch<ResponseNonConformityDTO>(`${this.base}/${id}/assign`, dto);
   }
 
   updateDueDate(id: string, date: string) {
