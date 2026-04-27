@@ -7,6 +7,7 @@ import { NcDetalhePage } from './pages/nc-detalhe/nc-detalhe.page';
 import { MinhaFilaPage } from './pages/minha-fila/minha-fila.page';
 import { AppLayoutComponent } from './shared/components/app-layout/app-layout.component';
 import { authGuard } from './core/guards/auth.guard';
+import { appHomeGuard } from './core/guards/app-home.guard';
 import { roleGuard } from './core/guards/role.guard';
 import { Profile } from './core/models/profile.enum';
 
@@ -17,12 +18,12 @@ export const routes: Routes = [
     canActivate: [authGuard],
     component: AppLayoutComponent,
     children: [
+      { path: '', pathMatch: 'full', canActivate: [appHomeGuard], component: DashboardPage },
       { path: 'dashboard', canActivate: [roleGuard([Profile.GESTOR])], component: DashboardPage },
       { path: 'minha-fila', canActivate: [roleGuard([Profile.RESPONSAVEL])], component: MinhaFilaPage },
       { path: 'ncs/nova', component: NcNovaPage },
       { path: 'ncs/:id', component: NcDetalhePage },
       { path: 'ncs', component: NcListaPage },
-      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
     ],
   },
   { path: '**', redirectTo: 'login' },

@@ -38,6 +38,10 @@ export class NonConformityService {
     return this.http.get<ResponseNonConformityDTO>(`${this.base}/${id}`);
   }
 
+  myQueue() {
+    return this.http.get<ResponseNonConformityDTO[]>(`${this.base}/my-queue`);
+  }
+
   create(dto: CreateNonConformityDTO) {
     return this.http.post<ResponseNonConformityDTO>(this.base, dto);
   }

@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { NonConformityService } from '../../core/services/non-conformity.service';
 import { ResponseNonConformityDTO } from '../../core/models/non-conformity.model';
-import { StatusNc } from '../../core/models/status-nc.enum';
+import { allowedStatusTransitions, STATUS_LABEL, StatusNc } from '../../core/models/status-nc.enum';
 import { SeverityBadgeComponent } from '../../shared/components/severity-badge/severity-badge.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
 import { OverdueBadgeComponent } from '../../shared/components/overdue-badge/overdue-badge.component';
@@ -21,15 +22,17 @@ export class MinhaFilaPage {
 
   user = this.auth.currentUser;
   items = signal<ResponseNonConformityDTO[]>([]);
+  updatingStatusId = signal<string | null>(null);
+  statusError = signal('');
 
   overdue = computed(() =>
-    this.items()
+    this.activeItems()
       .filter((n) => this.isOverdue(n))
       .sort((a, b) => +new Date(a.dueDate!) - +new Date(b.dueDate!)),
   );
 
   upcoming = computed(() =>
-    this.items()
+    this.activeItems()
       .filter((n) => !this.isOverdue(n))
       .sort(
         (a, b) =>
@@ -38,16 +41,46 @@ export class MinhaFilaPage {
   );
 
   constructor() {
-    const userId = this.user()?.id;
-    if (!userId) return;
-    this.svc
-      .list({ assignedToId: userId, pageSize: 100, order: 'ASC' })
-      .subscribe((page) => this.items.set(page.items));
+    this.svc.myQueue().subscribe((items) => this.items.set(items));
+  }
+
+  nextStatus(n: ResponseNonConformityDTO): StatusNc | null {
+    return allowedStatusTransitions(n.status).find((status) => status !== StatusNc.CANCELADA) ?? null;
+  }
+
+  quickActionLabel(n: ResponseNonConformityDTO): string {
+    const next = this.nextStatus(n);
+    return next === null ? 'Sem próxima etapa' : `Avançar para ${STATUS_LABEL[next]}`;
+  }
+
+  advance(n: ResponseNonConformityDTO) {
+    const next = this.nextStatus(n);
+    if (next === null) return;
+
+    this.statusError.set('');
+    this.updatingStatusId.set(n.id);
+    this.svc.updateStatus(n.id, next).subscribe({
+      next: (updated) => {
+        this.items.update((items) => items.map((item) => (item.id === updated.id ? updated : item)));
+        this.updatingStatusId.set(null);
+      },
+      error: (e: HttpErrorResponse) => {
+        this.statusError.set(e.error?.message ?? 'Erro ao atualizar status da NC.');
+        this.updatingStatusId.set(null);
+      },
+    });
+  }
+
+  private activeItems() {
+    return this.items().filter((n) => this.isQueueItem(n));
+  }
+
+  private isQueueItem(n: ResponseNonConformityDTO): boolean {
+    return n.status !== StatusNc.ENCERRADA && n.status !== StatusNc.CANCELADA;
   }
 
   private isOverdue(n: ResponseNonConformityDTO): boolean {
-    if (!n.dueDate || n.closedAt) return false;
-    if (n.status === StatusNc.ENCERRADA || n.status === StatusNc.CANCELADA) return false;
+    if (!n.dueDate || n.closedAt || !this.isQueueItem(n)) return false;
     return new Date(n.dueDate).getTime() < Date.now();
   }
 }

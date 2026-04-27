@@ -259,7 +259,7 @@
             {{ actions().length }} ações · {{ doneCount() }} concluídas
           </div>
         </div>
-        @if (isResponsavel()) {
+        @if (canManageActionPlan()) {
           <button (click)="showActionForm.update(v => !v)"
             class="px-3 py-1.5 bg-nc-ink text-white text-[12px] font-medium rounded-sm hover:opacity-90">
             + Adicionar ação

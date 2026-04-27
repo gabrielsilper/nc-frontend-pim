@@ -9,22 +9,25 @@ Legenda de status: ✅ feito · 🟡 parcial · ❌ não feito
 
 ---
 
-## 5. Plano de ação só pode ser preenchido pelo responsável atribuído
+## 5. Plano de ação só pode ser preenchido pelo responsável da NC ou qualquer gestor
 
-- Status FE: ❌  ·  BE: ❌
+- Status FE: ✅  ·  BE: ✅
 
 **Frontend**
 - `src/app/pages/nc-detalhe/nc-detalhe.page.{ts,html}` (bloco
   ações corretivas):
-  - Botão "Concluir" e formulário de evidência visíveis apenas
-    quando `action.assigneeId === currentUser().id`.
+  - Botão "Adicionar ação", botões de andamento/conclusão e
+    formulário de evidência visíveis apenas quando
+    `nc.assignedTo?.id === currentUser().id` **ou**
+    `currentUser().profile === GESTOR`.
   - Para os demais usuários, manter a ação visível somente em
     leitura.
 
 **Backend**
-- Criar `PATCH /corrective-actions/:id` com guard que valide
-  `req.user.id === action.assigneeId` antes de aceitar mudanças
-  em `status`, `evidence` ou `finishedAt`.
+- `POST /non-conformities/:ncId/corrective-actions` e
+  `PATCH /non-conformities/:ncId/corrective-actions/:caId`
+  validam `req.payload.profile === GESTOR || req.payload.sub === nc.assignedToId`
+  antes de aceitar alterações no plano.
 - Validar no service que `status = CONCLUIDA` só é aceita se
   `evidence` estiver preenchido.
 
@@ -35,23 +38,21 @@ Legenda de status: ✅ feito · 🟡 parcial · ❌ não feito
 
 ## 6. Responsável precisa ter a tela "Minha Fila"
 
-- Status FE: ❌  ·  BE: ❌
+- Status FE: ✅  ·  BE: ✅
 
 **Frontend**
 - Criar `src/app/pages/minha-fila/minha-fila.page.{ts,html}`.
 - Rota `/app/minha-fila` em `src/app/app.routes.ts`.
 - Link no `sidebar.component.html` visível quando
   `profile === RESPONSAVEL`.
-- Consumir
-  `NonConformityService.list({ assignedToId: currentUser().id, order: 'ASC' })`
-  enquanto o endpoint dedicado não existe; ordenar vencidas no
-  topo no cliente como fallback.
+- Consumir `NonConformityService.myQueue()` e manter vencidas no
+  topo.
 - Cada card mostra: `title`, `severity`, `dueDate` (formato
   brasileiro), botão para atualizar status; clique leva para
   `/app/ncs/:id`.
 
 **Backend**
-- Criar `GET /non-conformities/my-queue` ordenando por
+- `GET /non-conformities/my-queue` ordena por
   `dueDate ASC NULLS LAST` com vencidas primeiro. Acessível a
   qualquer usuário autenticado, filtrando por `req.user.id`.
 
@@ -126,13 +127,14 @@ passando a entidade inteira; a coluna real é `nonConformityId`
 - Novo método `updateCorrectiveAction(ncId, caId, dto)` em
   `src/app/core/services/non-conformity.service.ts`.
 - `nc-detalhe.page.ts` ganhou:
-  - `canEditAction(a)` — `currentUser()?.id === a.assigneeId`.
+  - `canEditAction()` — `nc.assignedTo?.id === currentUser().id || currentUser().profile === GESTOR`.
   - `startAction(a)` (PENDENTE → EM_ANDAMENTO).
   - `startEvidence(a)` + `saveEvidenceAndComplete(a)` — abre
     textarea inline e conclui com evidência.
   - `reopenAction(a)` (CONCLUIDA → EM_ANDAMENTO).
 - `nc-detalhe.page.html` — coluna "Ações" na tabela de ações
-  visível só para o assignee; demais usuários veem read-only.
+  visível só para o responsável atual da NC ou gestor; demais
+  usuários veem read-only.
   Evidência exibida como hoje (linha verde abaixo da descrição).
 
 ---

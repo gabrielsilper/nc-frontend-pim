@@ -106,6 +106,11 @@ export class NcDetalhePage {
       this.currentUser()?.profile === Profile.RESPONSAVEL ||
       this.currentUser()?.profile === Profile.GESTOR,
   );
+  canManageActionPlan = computed(
+    () =>
+      this.currentUser()?.profile === Profile.GESTOR ||
+      (!!this.nc()?.assignedTo?.id && this.nc()?.assignedTo?.id === this.currentUser()?.id),
+  );
 
   allowed = computed(() => {
     const s = this.nc()?.status;
@@ -367,8 +372,8 @@ export class NcDetalhePage {
     });
   }
 
-  canEditAction(a: ResponseCorrectiveActionDTO): boolean {
-    return this.currentUser()?.id === a.assignee.id;
+  canEditAction(_a: ResponseCorrectiveActionDTO): boolean {
+    return this.canManageActionPlan();
   }
 
   startEvidence(a: ResponseCorrectiveActionDTO) {
