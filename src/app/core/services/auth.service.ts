@@ -87,7 +87,11 @@ export class AuthService {
   me() {
     return this.http
       .get<ResponseUserDTO>(`${environment.apiUrl}/auth/me`)
-      .pipe(tap((user) => this.currentUser.set(user)));
+      .pipe(tap((user) => this.syncCurrentUser(user)));
+  }
+
+  syncCurrentUser(user: ResponseUserDTO): void {
+    this.currentUser.set(user);
   }
 
   private decodeToken(token: string): JwtPayload | null {

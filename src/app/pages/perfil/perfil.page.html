@@ -26,66 +26,170 @@
       Carregando perfil...
     </div>
   } @else if (user(); as currentUser) {
-    <div class="grid grid-cols-[340px_1fr] gap-4">
-      <section class="bg-nc-surface border border-nc-line rounded-sm p-6">
-        <div class="flex items-start gap-4">
-          <div class="w-16 h-16 bg-nc-accent text-white flex items-center justify-center font-mono text-[20px] font-semibold rounded-sm shrink-0">
-            {{ initials() }}
-          </div>
-          <div class="min-w-0">
-            <div class="text-[18px] font-semibold leading-tight">{{ currentUser.name }}</div>
-            <div class="mt-1 text-[13px] text-nc-ink-3 break-all">{{ currentUser.email }}</div>
-            <div class="mt-3 inline-flex items-center px-2.5 py-1 border border-nc-line-strong rounded-sm font-mono text-[10.5px] text-nc-ink-2 uppercase tracking-wider">
-              {{ profileLabel() }}
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="grid grid-cols-[340px_1fr] gap-4">
+        <section class="bg-nc-surface border border-nc-line rounded-sm p-6">
+          <div class="flex items-start gap-4">
+            <div class="w-16 h-16 bg-nc-accent text-white flex items-center justify-center font-mono text-[20px] font-semibold rounded-sm shrink-0">
+              {{ initials() }}
+            </div>
+            <div class="min-w-0">
+              <div class="text-[18px] font-semibold leading-tight">{{ form.controls.name.value || currentUser.name }}</div>
+              <div class="mt-1 text-[13px] text-nc-ink-3 break-all">{{ form.controls.email.value || currentUser.email }}</div>
+              <div class="mt-3 inline-flex items-center px-2.5 py-1 border border-nc-line-strong rounded-sm font-mono text-[10.5px] text-nc-ink-2 uppercase tracking-wider">
+                {{ profileLabel() }}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="mt-6 pt-4 border-t border-nc-line">
-          <div class="font-mono text-[10px] text-nc-muted uppercase tracking-widest mb-2">Acesso</div>
-          <p class="text-[12.5px] text-nc-ink-2 leading-relaxed m-0">{{ accessLabel() }}</p>
-        </div>
-      </section>
-
-      <section class="bg-nc-surface border border-nc-line rounded-sm">
-        <div class="px-4.5 py-3.5 border-b border-nc-line">
-          <div class="text-sm font-semibold">Informações da conta</div>
-          <div class="font-mono text-[10px] text-nc-muted uppercase tracking-wider mt-0.5">
-            Dados retornados por auth/me
+          <div class="mt-6 pt-4 border-t border-nc-line">
+            <div class="font-mono text-[10px] text-nc-muted uppercase tracking-widest mb-2">Acesso</div>
+            <p class="text-[12.5px] text-nc-ink-2 leading-relaxed m-0">{{ accessLabel() }}</p>
           </div>
-        </div>
+        </section>
 
-        <div class="p-5 grid grid-cols-2 gap-4">
-          <div class="border border-nc-line rounded-sm px-4 py-3">
-            <div class="font-mono text-[10px] text-nc-muted uppercase tracking-widest mb-1.5">Nome</div>
-            <div class="text-[13px] text-nc-ink">{{ currentUser.name }}</div>
+        <section class="bg-nc-surface border border-nc-line rounded-sm">
+          <div class="px-4.5 py-3.5 border-b border-nc-line">
+            <div class="text-sm font-semibold">Editar informacoes da conta</div>
+            <div class="font-mono text-[10px] text-nc-muted uppercase tracking-wider mt-0.5">
+              Dados pessoais e seguranca de acesso
+            </div>
           </div>
 
-          <div class="border border-nc-line rounded-sm px-4 py-3">
-            <div class="font-mono text-[10px] text-nc-muted uppercase tracking-widest mb-1.5">Perfil</div>
-            <div class="text-[13px] text-nc-ink">{{ profileLabel() }}</div>
+          <div class="p-5 flex flex-col gap-5">
+            @if (apiErrors()['_global']) {
+              <div class="px-4 py-3 bg-nc-critical-soft border border-nc-critical rounded-sm text-[12.5px] text-nc-critical">
+                {{ apiErrors()['_global'] }}
+              </div>
+            }
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-[11px] font-semibold uppercase tracking-widest text-nc-ink-2 mb-1">
+                  Nome <span class="text-nc-critical">*</span>
+                </label>
+                <input
+                  formControlName="name"
+                  type="text"
+                  class="w-full px-3 py-2 border rounded-sm text-[13px] outline-none focus:border-nc-ink"
+                  [class]="form.controls.name.touched && form.controls.name.invalid ? 'border-nc-critical' : 'border-nc-line-strong'"
+                />
+                @if (form.controls.name.touched && form.controls.name.errors?.['required']) {
+                  <p class="mt-1 text-[11.5px] text-nc-critical">Nome e obrigatorio.</p>
+                }
+                @if (form.controls.name.touched && form.controls.name.errors?.['minlength']) {
+                  <p class="mt-1 text-[11.5px] text-nc-critical">Nome deve ter no minimo 3 caracteres.</p>
+                }
+                @if (form.controls.name.touched && form.controls.name.errors?.['maxlength']) {
+                  <p class="mt-1 text-[11.5px] text-nc-critical">Nome deve ter no maximo 50 caracteres.</p>
+                }
+                @if (form.controls.name.touched && form.controls.name.errors?.['pattern']) {
+                  <p class="mt-1 text-[11.5px] text-nc-critical">Nome pode conter apenas letras e espacos.</p>
+                }
+                @if (apiErrors()['name']) {
+                  <p class="mt-1 text-[11.5px] text-nc-critical">{{ apiErrors()['name'] }}</p>
+                }
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-semibold uppercase tracking-widest text-nc-ink-2 mb-1">
+                  Perfil
+                </label>
+                <div class="w-full px-3 py-2 border border-nc-line bg-nc-panel rounded-sm text-[13px] text-nc-ink-2">
+                  {{ profileLabel() }}
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-semibold uppercase tracking-widest text-nc-ink-2 mb-1">
+                E-mail <span class="text-nc-critical">*</span>
+              </label>
+              <input
+                formControlName="email"
+                type="email"
+                class="w-full px-3 py-2 border rounded-sm text-[13px] outline-none focus:border-nc-ink"
+                [class]="form.controls.email.touched && form.controls.email.invalid ? 'border-nc-critical' : 'border-nc-line-strong'"
+              />
+              @if (form.controls.email.touched && form.controls.email.errors?.['required']) {
+                <p class="mt-1 text-[11.5px] text-nc-critical">E-mail e obrigatorio.</p>
+              }
+              @if (form.controls.email.touched && form.controls.email.errors?.['pattern']) {
+                <p class="mt-1 text-[11.5px] text-nc-critical">Informe um e-mail valido.</p>
+              }
+              @if (apiErrors()['email']) {
+                <p class="mt-1 text-[11.5px] text-nc-critical">{{ apiErrors()['email'] }}</p>
+              }
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-[11px] font-semibold uppercase tracking-widest text-nc-ink-2 mb-1">
+                  Nova senha
+                </label>
+                <input
+                  formControlName="password"
+                  type="password"
+                  placeholder="Preencha apenas se quiser alterar"
+                  class="w-full px-3 py-2 border rounded-sm text-[13px] outline-none focus:border-nc-ink"
+                  [class]="form.controls.password.touched && form.controls.password.invalid ? 'border-nc-critical' : 'border-nc-line-strong'"
+                />
+                @if (form.controls.password.touched && form.controls.password.errors?.['minlength']) {
+                  <p class="mt-1 text-[11.5px] text-nc-critical">Senha deve ter no minimo 8 caracteres.</p>
+                }
+                @if (form.controls.password.touched && form.controls.password.errors?.['maxlength']) {
+                  <p class="mt-1 text-[11.5px] text-nc-critical">Senha deve ter no maximo 25 caracteres.</p>
+                }
+                @if (form.controls.password.touched && form.controls.password.errors?.['pattern']) {
+                  <p class="mt-1 text-[11.5px] text-nc-critical">Senha deve conter maiuscula, minuscula, numero e caractere especial.</p>
+                }
+                @if (apiErrors()['password']) {
+                  <p class="mt-1 text-[11.5px] text-nc-critical">{{ apiErrors()['password'] }}</p>
+                }
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-semibold uppercase tracking-widest text-nc-ink-2 mb-1">
+                  Confirmar nova senha
+                </label>
+                <input
+                  formControlName="confirmPassword"
+                  type="password"
+                  placeholder="Repita a nova senha"
+                  class="w-full px-3 py-2 border rounded-sm text-[13px] outline-none focus:border-nc-ink"
+                  [class]="(form.controls.confirmPassword.touched && !!form.errors?.['confirmPasswordRequired']) || (form.controls.confirmPassword.touched && !!form.errors?.['passwordMismatch']) ? 'border-nc-critical' : 'border-nc-line-strong'"
+                />
+                @if (form.controls.confirmPassword.touched && form.errors?.['confirmPasswordRequired']) {
+                  <p class="mt-1 text-[11.5px] text-nc-critical">Confirme a nova senha para continuar.</p>
+                }
+                @if (form.controls.confirmPassword.touched && form.errors?.['passwordMismatch']) {
+                  <p class="mt-1 text-[11.5px] text-nc-critical">As senhas devem ser iguais.</p>
+                }
+              </div>
+            </div>
+
+            <div class="bg-nc-panel border border-nc-line rounded-sm px-4 py-3 text-[12px] text-nc-ink-2">
+              O perfil e apenas informativo. Nome e e-mail podem ser atualizados a qualquer momento; a senha so muda se for preenchida.
+            </div>
           </div>
 
-          <div class="border border-nc-line rounded-sm px-4 py-3 col-span-2">
-            <div class="font-mono text-[10px] text-nc-muted uppercase tracking-widest mb-1.5">E-mail</div>
-            <div class="text-[13px] text-nc-ink break-all">{{ currentUser.email }}</div>
+          <div class="px-5 pb-5 flex items-center justify-end gap-3">
+            <a
+              [routerLink]="['/app/ncs']"
+              class="inline-flex items-center px-3 py-1.5 border border-nc-line-strong text-nc-ink-2 text-[12px] font-medium rounded-sm hover:bg-nc-panel"
+            >
+              Ir para Nao Conformidades
+            </a>
+            <button
+              type="submit"
+              [disabled]="saving()"
+              class="px-4 py-2 bg-nc-accent text-white text-[13px] font-medium rounded-sm hover:opacity-90 disabled:opacity-60"
+            >
+              @if (saving()) { Salvando... } @else { Salvar alteracoes }
+            </button>
           </div>
-
-          <div class="border border-nc-line rounded-sm px-4 py-3 col-span-2">
-            <div class="font-mono text-[10px] text-nc-muted uppercase tracking-widest mb-1.5">ID do usuário</div>
-            <div class="font-mono text-[11.5px] text-nc-ink-2 break-all">{{ currentUser.id }}</div>
-          </div>
-        </div>
-
-        <div class="px-5 pb-5">
-          <a
-            [routerLink]="['/app/ncs']"
-            class="inline-flex items-center px-3 py-1.5 border border-nc-line-strong text-nc-ink-2 text-[12px] font-medium rounded-sm hover:bg-nc-panel"
-          >
-            Ir para Não Conformidades
-          </a>
-        </div>
-      </section>
-    </div>
+        </section>
+      </div>
+    </form>
   }
 </div>
