@@ -32,7 +32,6 @@ export interface ResponseNonConformityDTO {
   processLine: string;
   department: string;
   rootCause?: string;
-  rejectionReason?: string;
   createdBy: EmbeddedUserDTO;
   assignedTo: EmbeddedUserDTO | null;
   openedAt: string;
@@ -78,7 +77,6 @@ export interface UpdateNonConformityDTO {
   processLine?: string;
   department?: string;
   rootCause?: string;
-  rejectionReason?: string;
 }
 
 export interface AssignNonConformityDTO {
