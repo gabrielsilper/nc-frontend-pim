@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Profile, PROFILE_LABEL } from '../../core/models/profile.enum';
 import { ResponseUserDTO } from '../../core/models/user.model';
 import { UserService } from '../../core/services/user.service';
@@ -13,7 +14,7 @@ interface ProfileOption {
 @Component({
   selector: 'app-usuarios-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './usuarios.page.html',
 })
 export class UsuariosPage {

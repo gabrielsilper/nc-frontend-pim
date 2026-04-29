@@ -7,6 +7,13 @@ export interface ResponseUserDTO {
   profile: Profile;
 }
 
+export interface CreateUserDTO {
+  name: string;
+  email: string;
+  password: string;
+  profile: Profile;
+}
+
 export interface AuthUserDTO {
   id: string;
   profile: Profile;
