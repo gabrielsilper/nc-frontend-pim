@@ -83,7 +83,7 @@
           </tr>
         } @else {
           @for (user of filteredUsers(); track user.id) {
-            <tr class="border-t border-nc-line hover:bg-nc-panel">
+            <tr class="border-t border-nc-line hover:bg-nc-panel cursor-pointer" [routerLink]="['/app/usuarios', user.id]">
               <td class="px-3.5 py-2.5">
                 <div class="flex items-center gap-2.5 min-w-0">
                   <span class="w-8 h-8 bg-nc-ink text-white flex items-center justify-center font-mono text-[10.5px] font-semibold rounded-sm shrink-0">
