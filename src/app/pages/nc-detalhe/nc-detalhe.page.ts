@@ -129,10 +129,14 @@ export class NcDetalhePage {
     return s !== undefined ? allowedStatusTransitions(s) : [];
   });
 
-  canCancel = computed(() => this.allowed().includes(StatusNc.CANCELADA));
+  canCancel = computed(() => this.isResponsavel() && this.allowed().includes(StatusNc.CANCELADA));
   primaryNext = computed(() => this.allowed().find((s) => s !== StatusNc.CANCELADA) ?? null);
 
   doneCount = computed(() => this.actions().filter((a) => a.status === StatusCa.CONCLUIDA).length);
+  pendingActionsCount = computed(() => this.actions().length - this.doneCount());
+  allCorrectiveActionsCompleted = computed(
+    () => this.actions().length > 0 && this.pendingActionsCount() === 0,
+  );
 
   isOverdue = computed(() => {
     const n = this.nc();
@@ -230,19 +234,23 @@ export class NcDetalhePage {
     const { title, description, severity, type, processLine, department } =
       this.editForm.getRawValue();
 
-    this.svc.update(n.id, { title, description, severity, type, processLine, department }).subscribe({
-      next: (updated) => {
-        this.applyNcState(updated);
-        this.showEdit.set(false);
-        this.loading.set(false);
-      },
-      error: (e: HttpErrorResponse) => {
-        this.editError.set(
-          e.status === 400 ? 'Dados inválidos. Verifique os campos.' : 'Erro ao salvar. Tente novamente.',
-        );
-        this.loading.set(false);
-      },
-    });
+    this.svc
+      .update(n.id, { title, description, severity, type, processLine, department })
+      .subscribe({
+        next: (updated) => {
+          this.applyNcState(updated);
+          this.showEdit.set(false);
+          this.loading.set(false);
+        },
+        error: (e: HttpErrorResponse) => {
+          this.editError.set(
+            e.status === 400
+              ? 'Dados inválidos. Verifique os campos.'
+              : 'Erro ao salvar. Tente novamente.',
+          );
+          this.loading.set(false);
+        },
+      });
   }
 
   saveRootCause() {
@@ -286,6 +294,11 @@ export class NcDetalhePage {
   transition(next: StatusNc) {
     const n = this.nc();
     if (!n) return;
+
+    if (!this.canTransition(next)) {
+      this.transitionError.set(this.transitionBlockReason(next));
+      return;
+    }
 
     if (next === StatusNc.ENCERRADA && !this.rootCause.trim()) {
       this.transitionError.set('Preencha e salve a causa raiz antes de encerrar a NC.');
@@ -499,6 +512,45 @@ export class NcDetalhePage {
       !!this.nc()?.assignedTo &&
       isValidBrDate(this.newActionDeadline)
     );
+  }
+
+  canTransition(next: StatusNc): boolean {
+    const n = this.nc();
+    if (!n || !this.isResponsavel()) return false;
+
+    if (next === StatusNc.EM_TRATAMENTO) {
+      return !!n.assignedTo && !!n.dueDate;
+    }
+
+    if (next === StatusNc.AGUARDANDO_VERIFICACAO) {
+      return this.allCorrectiveActionsCompleted();
+    }
+
+    if (next === StatusNc.ENCERRADA) {
+      return this.isGestor() && !!this.rootCause.trim();
+    }
+
+    return true;
+  }
+
+  transitionBlockReason(next: StatusNc): string {
+    if (next === StatusNc.EM_TRATAMENTO) {
+      return 'Atribua um responsável e um prazo antes de iniciar o tratamento.';
+    }
+
+    if (next === StatusNc.AGUARDANDO_VERIFICACAO) {
+      return 'Conclua todas as ações corretivas antes de enviar para verificação.';
+    }
+
+    if (next === StatusNc.ENCERRADA && !this.isGestor()) {
+      return 'Somente um gestor pode encerrar uma NC em verificação.';
+    }
+
+    if (next === StatusNc.ENCERRADA) {
+      return 'Preencha e salve a causa raiz antes de encerrar a NC.';
+    }
+
+    return 'Você não tem permissão para avançar este status.';
   }
 
   private applyNcState(n: ResponseNonConformityDTO) {

@@ -39,7 +39,9 @@
 
     @if (primaryNext(); as next) {
       <button (click)="transition(next)"
-        class="px-3 py-1.5 bg-nc-ink text-white text-[12px] font-medium rounded-sm hover:opacity-90">
+        [disabled]="!canTransition(next)"
+        [title]="!canTransition(next) ? transitionBlockReason(next) : ''"
+        class="px-3 py-1.5 bg-nc-ink text-white text-[12px] font-medium rounded-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed">
         Avançar para {{ STATUS_LABEL[next] }} →
       </button>
     }
