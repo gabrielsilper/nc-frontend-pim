@@ -50,8 +50,11 @@ export class NonConformityService {
     return this.http.put<ResponseNonConformityDTO>(`${this.base}/${id}`, dto);
   }
 
-  updateStatus(id: string, status: StatusNc) {
-    return this.http.patch<ResponseNonConformityDTO>(`${this.base}/${id}/status/${status}`, {});
+  updateStatus(id: string, status: StatusNc, data?: { rejectionReason?: string }) {
+    return this.http.patch<ResponseNonConformityDTO>(
+      `${this.base}/${id}/status/${status}`,
+      data || {},
+    );
   }
 
   assign(id: string, dto: AssignNonConformityDTO) {

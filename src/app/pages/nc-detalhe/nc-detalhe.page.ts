@@ -89,6 +89,10 @@ export class NcDetalhePage {
   evidenceDraft = '';
   updatingActionId = signal<string | null>(null);
 
+  showRejectionModal = signal(false);
+  rejectionReason = signal('');
+  submitingRejection = signal(false);
+
   readonly StatusNc = StatusNc;
   readonly StatusCa = StatusCa;
   readonly STATUS_LABEL = STATUS_LABEL;
@@ -131,6 +135,13 @@ export class NcDetalhePage {
 
   canCancel = computed(() => this.isResponsavel() && this.allowed().includes(StatusNc.CANCELADA));
   primaryNext = computed(() => this.allowed().find((s) => s !== StatusNc.CANCELADA) ?? null);
+
+  canRejectVerification = computed(
+    () =>
+      this.nc()?.status === StatusNc.AGUARDANDO_VERIFICACAO &&
+      this.isGestor() &&
+      !this.submitingRejection(),
+  );
 
   doneCount = computed(() => this.actions().filter((a) => a.status === StatusCa.CONCLUIDA).length);
   pendingActionsCount = computed(() => this.actions().length - this.doneCount());
@@ -313,6 +324,43 @@ export class NcDetalhePage {
         this.transitionError.set(msg);
       },
     });
+  }
+
+  openRejectionModal() {
+    if (!this.canRejectVerification()) return;
+    this.rejectionReason.set('');
+    this.transitionError.set('');
+    this.showRejectionModal.set(true);
+  }
+
+  closeRejectionModal() {
+    this.showRejectionModal.set(false);
+    this.rejectionReason.set('');
+  }
+
+  submitRejection() {
+    const n = this.nc();
+    const reason = this.rejectionReason().trim();
+
+    if (!n || !reason || reason.length < 5) {
+      this.transitionError.set('Informe uma justificativa com pelo menos 5 caracteres.');
+      return;
+    }
+
+    this.submitingRejection.set(true);
+    this.svc
+      .updateStatus(n.id, StatusNc.EM_TRATAMENTO, { rejectionReason: reason } as any)
+      .subscribe({
+        next: (updated) => {
+          this.nc.set(updated);
+          this.closeRejectionModal();
+          this.submitingRejection.set(false);
+        },
+        error: (e: HttpErrorResponse) => {
+          this.transitionError.set(e.error?.message ?? 'Erro ao rejeitar NC.');
+          this.submitingRejection.set(false);
+        },
+      });
   }
 
   openAssign() {
