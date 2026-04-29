@@ -5,7 +5,6 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { NonConformityService } from '../../core/services/non-conformity.service';
 import { ResponseNonConformityDTO } from '../../core/models/non-conformity.model';
-import { Profile } from '../../core/models/profile.enum';
 import { allowedStatusTransitions, STATUS_LABEL, StatusNc } from '../../core/models/status-nc.enum';
 import { SeverityBadgeComponent } from '../../shared/components/severity-badge/severity-badge.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
@@ -14,13 +13,7 @@ import { OverdueBadgeComponent } from '../../shared/components/overdue-badge/ove
 @Component({
   selector: 'app-minha-fila-page',
   standalone: true,
-  imports: [
-    CommonModule,
-    RouterLink,
-    SeverityBadgeComponent,
-    StatusBadgeComponent,
-    OverdueBadgeComponent,
-  ],
+  imports: [CommonModule, RouterLink, SeverityBadgeComponent, StatusBadgeComponent, OverdueBadgeComponent],
   templateUrl: './minha-fila.page.html',
 })
 export class MinhaFilaPage {
@@ -41,7 +34,10 @@ export class MinhaFilaPage {
   upcoming = computed(() =>
     this.activeItems()
       .filter((n) => !this.isOverdue(n))
-      .sort((a, b) => +new Date(a.dueDate ?? '2999-01-01') - +new Date(b.dueDate ?? '2999-01-01')),
+      .sort(
+        (a, b) =>
+          +new Date(a.dueDate ?? '2999-01-01') - +new Date(b.dueDate ?? '2999-01-01'),
+      ),
   );
 
   constructor() {
@@ -49,9 +45,7 @@ export class MinhaFilaPage {
   }
 
   nextStatus(n: ResponseNonConformityDTO): StatusNc | null {
-    return (
-      allowedStatusTransitions(n.status).find((status) => status !== StatusNc.CANCELADA) ?? null
-    );
+    return allowedStatusTransitions(n.status).find((status) => status !== StatusNc.CANCELADA) ?? null;
   }
 
   quickActionLabel(n: ResponseNonConformityDTO): string {
@@ -59,49 +53,15 @@ export class MinhaFilaPage {
     return next === null ? 'Sem próxima etapa' : `Avançar para ${STATUS_LABEL[next]}`;
   }
 
-  canAdvance(n: ResponseNonConformityDTO): boolean {
-    const next = this.nextStatus(n);
-    if (next === null) return false;
-
-    if (next === StatusNc.AGUARDANDO_VERIFICACAO) {
-      return false;
-    }
-
-    if (next === StatusNc.ENCERRADA) {
-      return this.user()?.profile === Profile.GESTOR;
-    }
-
-    return true;
-  }
-
-  advanceBlockReason(n: ResponseNonConformityDTO): string {
-    const next = this.nextStatus(n);
-
-    if (next === StatusNc.AGUARDANDO_VERIFICACAO) {
-      return 'Abra a NC para conferir se todas as ações corretivas foram concluídas.';
-    }
-
-    if (next === StatusNc.ENCERRADA) {
-      return 'Somente um gestor pode encerrar uma NC em verificação.';
-    }
-
-    return '';
-  }
-
   advance(n: ResponseNonConformityDTO) {
     const next = this.nextStatus(n);
-    if (next === null || !this.canAdvance(n)) {
-      this.statusError.set(this.advanceBlockReason(n));
-      return;
-    }
+    if (next === null) return;
 
     this.statusError.set('');
     this.updatingStatusId.set(n.id);
     this.svc.updateStatus(n.id, next).subscribe({
       next: (updated) => {
-        this.items.update((items) =>
-          items.map((item) => (item.id === updated.id ? updated : item)),
-        );
+        this.items.update((items) => items.map((item) => (item.id === updated.id ? updated : item)));
         this.updatingStatusId.set(null);
       },
       error: (e: HttpErrorResponse) => {
