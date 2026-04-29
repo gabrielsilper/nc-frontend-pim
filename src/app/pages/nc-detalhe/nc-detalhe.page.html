@@ -238,7 +238,7 @@
       </div>
 
       @if (canEditRootCause()) {
-        <textarea rows="3" [(ngModel)]="rootCause"
+        <textarea rows="3" [ngModel]="rootCause()" (ngModelChange)="rootCause.set($event)"
           placeholder="Descreva a causa raiz identificada (obrigatório para encerrar)…"
           class="w-full px-3 py-2 border border-nc-line-strong text-[13px] rounded-sm outline-none focus:border-nc-ink resize-none mb-3"></textarea>
         <button (click)="saveRootCause()" [disabled]="!canSaveRootCause()"

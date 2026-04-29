@@ -77,7 +77,7 @@ export class NcDetalhePage {
   selectedUserId = '';
   assignDueDate = '';
 
-  rootCause = '';
+  rootCause = signal('');
   dueDateLocal = '';
 
   newActionDesc = '';
@@ -119,7 +119,7 @@ export class NcDetalhePage {
   );
   canSaveRootCause = computed(() => {
     if (!this.canEditRootCause() || this.savingRootCause()) return false;
-    const current = this.rootCause.trim();
+    const current = this.rootCause().trim();
     const saved = this.nc()?.rootCause?.trim() ?? '';
     return current.length > 0 && current !== saved;
   });
@@ -258,7 +258,7 @@ export class NcDetalhePage {
     if (!n || !this.canSaveRootCause()) return;
 
     this.savingRootCause.set(true);
-    this.svc.update(n.id, { rootCause: this.rootCause }).subscribe({
+    this.svc.update(n.id, { rootCause: this.rootCause() }).subscribe({
       next: (updated) => {
         this.applyNcState(updated);
         this.savingRootCause.set(false);
@@ -300,7 +300,7 @@ export class NcDetalhePage {
       return;
     }
 
-    if (next === StatusNc.ENCERRADA && !this.rootCause.trim()) {
+    if (next === StatusNc.ENCERRADA && !this.rootCause().trim()) {
       this.transitionError.set('Preencha e salve a causa raiz antes de encerrar a NC.');
       return;
     }
@@ -527,7 +527,7 @@ export class NcDetalhePage {
     }
 
     if (next === StatusNc.ENCERRADA) {
-      return this.isGestor() && !!this.rootCause.trim();
+      return this.isGestor() && !!this.rootCause().trim();
     }
 
     return true;
@@ -555,7 +555,7 @@ export class NcDetalhePage {
 
   private applyNcState(n: ResponseNonConformityDTO) {
     this.nc.set(n);
-    this.rootCause = n.rootCause ?? '';
+    this.rootCause.set(n.rootCause ?? '');
     this.dueDateLocal = isoToBrDateInput(n.dueDate);
 
     if (n.status === StatusNc.ENCERRADA) {
