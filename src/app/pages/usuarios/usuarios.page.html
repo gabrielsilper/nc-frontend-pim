@@ -1,0 +1,114 @@
+<div class="h-14 bg-nc-surface border-b border-nc-line px-6 flex items-center gap-6 sticky top-0 z-10">
+  <div class="flex-1">
+    <div class="font-mono text-[10px] text-nc-muted uppercase tracking-widest mb-0.5">Gestão</div>
+    <h1 class="text-[17px] font-semibold m-0 tracking-[-0.003em]">Usuários</h1>
+  </div>
+  <span class="font-mono text-[11px] text-nc-ink-3">{{ filteredTotal() }} de {{ total() }} usuários</span>
+  <button
+    type="button"
+    (click)="load()"
+    [disabled]="loading()"
+    class="px-3 py-1.5 bg-nc-surface border border-nc-line text-nc-ink-2 text-xs font-medium rounded-sm hover:bg-nc-panel disabled:opacity-50 disabled:cursor-not-allowed"
+  >
+    Atualizar
+  </button>
+  <button
+    type="button"
+    [routerLink]="['/app/usuarios/novo']"
+    class="px-3.5 py-1.5 bg-nc-accent text-white text-xs font-medium rounded-sm hover:opacity-90"
+  >
+    + Novo Usuario
+  </button>
+</div>
+
+<div class="p-6">
+  <div class="font-mono text-[10px] text-nc-muted uppercase tracking-widest mb-2">Filtros</div>
+  <div class="bg-nc-surface border border-nc-line rounded-sm px-4 py-3 mb-4 flex flex-wrap items-center gap-3">
+    <input
+      [ngModel]="draftSearch"
+      (ngModelChange)="updateSearch($event)"
+      (keydown.enter)="applyFilters()"
+      placeholder="Buscar por nome, e-mail ou perfil..."
+      class="flex-1 min-w-55 px-3 py-1.5 border border-nc-line-strong text-[12.5px] rounded-sm outline-none focus:border-nc-ink"
+    />
+    <select
+      [ngModel]="draftProfileFilter"
+      (ngModelChange)="updateProfileFilter($event)"
+      class="px-2.5 py-1.5 border border-nc-line-strong text-[12.5px] rounded-sm bg-nc-surface"
+    >
+      <option [ngValue]="null">Todos os perfis</option>
+      @for (profile of profileOptions; track profile.value) {
+        <option [ngValue]="profile.value">{{ profile.label }}</option>
+      }
+    </select>
+    <button
+      type="button"
+      (click)="applyFilters()"
+      class="px-3.5 py-1.5 bg-nc-ink text-white text-[12px] font-medium rounded-sm hover:opacity-90"
+    >
+      Aplicar filtros
+    </button>
+    <button
+      type="button"
+      (click)="clearFilters()"
+      class="text-[11.5px] text-nc-ink-2 underline"
+    >
+      Limpar filtros
+    </button>
+  </div>
+
+  @if (error()) {
+    <div class="mb-4 px-4 py-3 bg-nc-critical-soft border border-nc-critical/30 rounded-sm text-[12.5px] text-nc-critical flex items-center justify-between gap-3">
+      <span>{{ error() }}</span>
+      <button type="button" (click)="load()" class="font-medium underline underline-offset-2">Tentar novamente</button>
+    </div>
+  }
+
+  <div class="bg-nc-surface border border-nc-line rounded-sm">
+    <table class="w-full text-[12.5px] border-collapse">
+      <thead class="bg-nc-panel font-mono text-[10px] text-nc-ink-3 tracking-wider uppercase">
+        <tr>
+          <th class="text-left px-3.5 py-2 font-medium">Usuário</th>
+          <th class="text-left px-3.5 py-2 font-medium">E-mail</th>
+          <th class="text-left px-3.5 py-2 font-medium">Perfil</th>
+          <th class="text-right px-3.5 py-2 font-medium">ID</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          <tr>
+            <td colspan="4" class="px-3.5 py-10 text-center text-nc-ink-3 text-[12.5px]">
+              Carregando usuários...
+            </td>
+          </tr>
+        } @else {
+          @for (user of filteredUsers(); track user.id) {
+            <tr class="border-t border-nc-line hover:bg-nc-panel cursor-pointer" [routerLink]="['/app/usuarios', user.id]">
+              <td class="px-3.5 py-2.5">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <span class="w-8 h-8 bg-nc-ink text-white flex items-center justify-center font-mono text-[10.5px] font-semibold rounded-sm shrink-0">
+                    {{ initials(user.name) }}
+                  </span>
+                  <span class="font-medium truncate">{{ user.name }}</span>
+                </div>
+              </td>
+              <td class="px-3.5 py-2.5 text-nc-ink-3">{{ user.email }}</td>
+              <td class="px-3.5 py-2.5">
+                <span class="inline-flex items-center px-2 py-0.75 border border-nc-line-strong rounded-sm font-mono text-[10.5px] text-nc-ink-2 uppercase tracking-wider">
+                  {{ profileLabel(user.profile) }}
+                </span>
+              </td>
+              <td class="px-3.5 py-2.5 text-right font-mono text-[10.5px] text-nc-muted">{{ user.id }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="4" class="px-3.5 py-10 text-center text-nc-ink-3 text-[12.5px]">
+                Nenhum usuário encontrado com esses filtros.
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

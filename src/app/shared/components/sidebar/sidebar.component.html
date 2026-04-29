@@ -47,6 +47,17 @@
       <span class="material-symbols-outlined">assignment_late</span>
       Não Conformidades
     </a>
+    @if (isGestor()) {
+      <a
+        routerLink="/app/usuarios"
+        routerLinkActive="bg-white/5 text-white border-l-nc-accent"
+        [routerLinkActiveOptions]="{ exact: false }"
+        class="flex items-center gap-2.5 px-5 py-2.5 text-[13px] text-white/70 border-l-[3px] border-l-transparent hover:bg-white/5 hover:text-white transition-colors"
+      >
+        <span class="material-symbols-outlined">group</span>
+        Usuários
+      </a>
+    }
   </nav>
 
   <div class="px-4 py-3 border-t border-white/10">
@@ -62,6 +73,13 @@
           {{ profileLabel() }}
         </div>
       </div>
+      <a
+        routerLink="/app/perfil"
+        title="Meu perfil"
+        class="w-7 h-7 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 rounded-sm transition-colors"
+      >
+        <span class="material-symbols-outlined text-[18px]">person</span>
+      </a>
       <button
         type="button"
         (click)="logout()"

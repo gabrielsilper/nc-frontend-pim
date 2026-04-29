@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { ResponseUserDTO } from '../models/user.model';
+import { CreateUserDTO, ResponseUserDTO, UpdateUserDTO } from '../models/user.model';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
@@ -14,5 +14,13 @@ export class UserService {
 
   listAll() {
     return this.http.get<ResponseUserDTO[]>(this.base);
+  }
+
+  create(dto: CreateUserDTO) {
+    return this.http.post<ResponseUserDTO>(this.base, dto);
+  }
+
+  update(id: string, dto: UpdateUserDTO) {
+    return this.http.put<ResponseUserDTO>(`${this.base}/${id}`, dto);
   }
 }

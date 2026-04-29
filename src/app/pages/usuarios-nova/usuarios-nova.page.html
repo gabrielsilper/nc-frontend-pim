@@ -1,0 +1,161 @@
+<div class="h-14 bg-nc-surface border-b border-nc-line px-6 flex items-center sticky top-0 z-10">
+  <div>
+    <div class="font-mono text-[10px] text-nc-muted uppercase tracking-widest mb-0.5">Gestao / Usuarios</div>
+    <h1 class="text-[17px] font-semibold m-0 tracking-[-0.003em]">Novo Usuario</h1>
+  </div>
+</div>
+
+<div class="p-6">
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="bg-nc-surface border border-nc-line rounded-sm p-6 flex flex-col gap-5">
+      @if (apiErrors()['_global']) {
+        <div class="px-4 py-3 bg-nc-critical-soft border border-nc-critical rounded-sm text-[12.5px] text-nc-critical">
+          {{ apiErrors()['_global'] }}
+        </div>
+      }
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-[11px] font-semibold uppercase tracking-widest text-nc-ink-2 mb-1">
+            Nome <span class="text-nc-critical">*</span>
+          </label>
+          <input
+            formControlName="name"
+            type="text"
+            placeholder="Ex: Juliana Pereira"
+            class="w-full px-3 py-2 border rounded-sm text-[13px] outline-none focus:border-nc-ink"
+            [class]="form.controls.name.touched && form.controls.name.invalid ? 'border-nc-critical' : 'border-nc-line-strong'"
+          />
+          @if (form.controls.name.touched && form.controls.name.errors?.['required']) {
+            <p class="mt-1 text-[11.5px] text-nc-critical">Nome e obrigatorio.</p>
+          }
+          @if (form.controls.name.touched && form.controls.name.errors?.['minlength']) {
+            <p class="mt-1 text-[11.5px] text-nc-critical">Nome deve ter no minimo 3 caracteres.</p>
+          }
+          @if (form.controls.name.touched && form.controls.name.errors?.['maxlength']) {
+            <p class="mt-1 text-[11.5px] text-nc-critical">Nome deve ter no maximo 50 caracteres.</p>
+          }
+          @if (form.controls.name.touched && form.controls.name.errors?.['pattern']) {
+            <p class="mt-1 text-[11.5px] text-nc-critical">Nome pode conter apenas letras e espacos.</p>
+          }
+          @if (apiErrors()['name']) {
+            <p class="mt-1 text-[11.5px] text-nc-critical">{{ apiErrors()['name'] }}</p>
+          }
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold uppercase tracking-widest text-nc-ink-2 mb-1">
+            Perfil <span class="text-nc-critical">*</span>
+          </label>
+          <select
+            formControlName="profile"
+            class="w-full px-3 py-2 border rounded-sm text-[13px] outline-none focus:border-nc-ink bg-nc-surface"
+            [class]="form.controls.profile.touched && form.controls.profile.invalid ? 'border-nc-critical' : 'border-nc-line-strong'"
+          >
+            <option [ngValue]="null">Selecione um perfil</option>
+            @for (profile of profileOptions; track profile.value) {
+              <option [ngValue]="profile.value">{{ profile.label }}</option>
+            }
+          </select>
+          @if (form.controls.profile.touched && form.controls.profile.errors?.['required']) {
+            <p class="mt-1 text-[11.5px] text-nc-critical">Perfil e obrigatorio.</p>
+          }
+          @if (apiErrors()['profile']) {
+            <p class="mt-1 text-[11.5px] text-nc-critical">{{ apiErrors()['profile'] }}</p>
+          }
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-semibold uppercase tracking-widest text-nc-ink-2 mb-1">
+          E-mail <span class="text-nc-critical">*</span>
+        </label>
+        <input
+          formControlName="email"
+          type="email"
+          placeholder="nome.sobrenome@empresa.com.br"
+          class="w-full px-3 py-2 border rounded-sm text-[13px] outline-none focus:border-nc-ink"
+          [class]="form.controls.email.touched && form.controls.email.invalid ? 'border-nc-critical' : 'border-nc-line-strong'"
+        />
+        @if (form.controls.email.touched && form.controls.email.errors?.['required']) {
+          <p class="mt-1 text-[11.5px] text-nc-critical">E-mail e obrigatorio.</p>
+        }
+        @if (form.controls.email.touched && form.controls.email.errors?.['pattern']) {
+          <p class="mt-1 text-[11.5px] text-nc-critical">Informe um e-mail valido.</p>
+        }
+        @if (apiErrors()['email']) {
+          <p class="mt-1 text-[11.5px] text-nc-critical">{{ apiErrors()['email'] }}</p>
+        }
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-[11px] font-semibold uppercase tracking-widest text-nc-ink-2 mb-1">
+            Senha <span class="text-nc-critical">*</span>
+          </label>
+          <input
+            formControlName="password"
+            type="password"
+            placeholder="Crie uma senha forte"
+            class="w-full px-3 py-2 border rounded-sm text-[13px] outline-none focus:border-nc-ink"
+            [class]="form.controls.password.touched && form.controls.password.invalid ? 'border-nc-critical' : 'border-nc-line-strong'"
+          />
+          @if (form.controls.password.touched && form.controls.password.errors?.['required']) {
+            <p class="mt-1 text-[11.5px] text-nc-critical">Senha e obrigatoria.</p>
+          }
+          @if (form.controls.password.touched && form.controls.password.errors?.['minlength']) {
+            <p class="mt-1 text-[11.5px] text-nc-critical">Senha deve ter no minimo 8 caracteres.</p>
+          }
+          @if (form.controls.password.touched && form.controls.password.errors?.['maxlength']) {
+            <p class="mt-1 text-[11.5px] text-nc-critical">Senha deve ter no maximo 25 caracteres.</p>
+          }
+          @if (form.controls.password.touched && form.controls.password.errors?.['pattern']) {
+            <p class="mt-1 text-[11.5px] text-nc-critical">Senha deve conter maiuscula, minuscula, numero e caractere especial.</p>
+          }
+          @if (apiErrors()['password']) {
+            <p class="mt-1 text-[11.5px] text-nc-critical">{{ apiErrors()['password'] }}</p>
+          }
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold uppercase tracking-widest text-nc-ink-2 mb-1">
+            Confirmar senha <span class="text-nc-critical">*</span>
+          </label>
+          <input
+            formControlName="confirmPassword"
+            type="password"
+            placeholder="Repita a senha"
+            class="w-full px-3 py-2 border rounded-sm text-[13px] outline-none focus:border-nc-ink"
+            [class]="(form.controls.confirmPassword.touched && form.controls.confirmPassword.invalid) || (form.controls.confirmPassword.touched && form.errors?.['passwordMismatch']) ? 'border-nc-critical' : 'border-nc-line-strong'"
+          />
+          @if (form.controls.confirmPassword.touched && form.controls.confirmPassword.errors?.['required']) {
+            <p class="mt-1 text-[11.5px] text-nc-critical">Confirmacao de senha e obrigatoria.</p>
+          }
+          @if (form.controls.confirmPassword.touched && form.errors?.['passwordMismatch']) {
+            <p class="mt-1 text-[11.5px] text-nc-critical">As senhas devem ser iguais.</p>
+          }
+        </div>
+      </div>
+
+      <div class="bg-nc-panel border border-nc-line rounded-sm px-4 py-3 text-[12px] text-nc-ink-2">
+        O cadastro segue a validacao do backend: nome com 3 a 50 caracteres, e-mail valido e senha forte com 8 a 25 caracteres.
+      </div>
+    </div>
+
+    <div class="flex items-center justify-end gap-3 mt-4">
+      <a
+        [routerLink]="['/app/usuarios']"
+        class="px-4 py-2 border border-nc-line-strong text-nc-ink-2 text-[13px] font-medium rounded-sm hover:bg-nc-panel cursor-pointer"
+      >
+        Cancelar
+      </a>
+      <button
+        type="submit"
+        [disabled]="loading()"
+        class="px-4 py-2 bg-nc-accent text-white text-[13px] font-medium rounded-sm hover:opacity-90 disabled:opacity-60"
+      >
+        @if (loading()) { Cadastrando... } @else { + Novo Usuario }
+      </button>
+    </div>
+  </form>
+</div>
