@@ -113,12 +113,12 @@ export class NcDetalhePage {
       this.currentUser()?.profile === Profile.GESTOR,
   );
   canEditNc = computed(() => this.isResponsavel() && !this.isNcClosed() && !this.isNcCanceled());
-  canEditRootCause = computed(() => this.isResponsavel() && !this.isNcClosed());
-  canEditDueDate = computed(() => this.isGestor() && !this.isNcClosed());
-  canEditAssignment = computed(() => this.isGestor() && !this.isNcClosed());
+  canEditRootCause = computed(() => this.isResponsavel() && !this.isNcClosed() && !this.isNcCanceled());
+  canEditDueDate = computed(() => this.isGestor() && !this.isNcClosed() && !this.isNcCanceled());
+  canEditAssignment = computed(() => this.isGestor() && !this.isNcClosed() && !this.isNcCanceled());
   canManageActionPlan = computed(
     () =>
-      !this.isNcClosed() && !this.isNcCanceled &&
+      !this.isNcClosed() && !this.isNcCanceled() &&
       (this.currentUser()?.profile === Profile.GESTOR ||
         (!!this.nc()?.assignedTo?.id && this.nc()?.assignedTo?.id === this.currentUser()?.id)),
   );
