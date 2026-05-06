@@ -43,22 +43,35 @@ export function brDateToDateOnly(value: string): string | null {
   return `${yearStr}-${monthStr}-${dayStr}`;
 }
 
+export function brDateToEndOfDayIso(value: string): string | null {
+  if (!isValidBrDate(value)) return null;
+  const [dayStr, monthStr, yearStr] = value.split('/');
+  const date = new Date(Number(yearStr), Number(monthStr) - 1, Number(dayStr), 23, 59, 59);
+  const offset = -date.getTimezoneOffset();
+  const sign = offset >= 0 ? '+' : '-';
+  const hh = String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0');
+  const mm = String(Math.abs(offset) % 60).padStart(2, '0');
+  const yyyy = String(date.getFullYear());
+  const mo = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mo}-${dd}T23:59:59${sign}${hh}:${mm}`;
+}
+
 export function isoToBrDateInput(value?: string | null): string {
-  if (!value) {
-    return '';
+  if (!value) return '';
+
+  // Full datetime string: parse and use local timezone components
+  if (value.includes('T')) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}`;
   }
 
-  const dateOnly = value.split('T')[0];
-
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) {
-    const [year, month, day] = dateOnly.split('-');
+  // Date-only string (YYYY-MM-DD): interpret as-is, no timezone conversion
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split('-');
     return `${day}/${month}/${year}`;
   }
 
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return '';
-  }
-
-  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}`;
+  return '';
 }

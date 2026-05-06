@@ -352,7 +352,51 @@
                     </div>
                   }
                 </td>
-                <td class="px-3 py-3 font-mono text-nc-ink-3">{{ a.deadline | date:'dd/MM/yyyy' }}</td>
+                <td class="px-3 py-3">
+                  @if (canEditAction(a) && editingDeadlineActionId() === a.id) {
+                    <div class="flex flex-col gap-1">
+                      <div class="relative">
+                        <input [ngModel]="editingDeadlineDraft" (ngModelChange)="onDeadlineDraftChange($event)"
+                          type="text" inputmode="numeric" placeholder="dd/MM/aaaa"
+                          class="w-full pl-8 pr-2 py-1 border border-nc-line-strong text-[12px] rounded-sm outline-none focus:border-nc-ink" />
+                        <span class="absolute inset-y-0 left-0 w-7 flex items-center justify-center text-nc-muted pointer-events-none">
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M8 2v4m8-4v4M3 10h18M5 6h14a2 2 0 012 2v11a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z" />
+                          </svg>
+                        </span>
+                        <input #deadlineDraftPicker type="date"
+                          [value]="deadlineDraftForPicker()"
+                          class="absolute inset-y-0 left-0 w-7 opacity-0 cursor-pointer"
+                          aria-label="Abrir calendário"
+                          (change)="onDeadlineDraftPicked(deadlineDraftPicker.value)" />
+                      </div>
+                      <div class="flex gap-1">
+                        <button (click)="saveDeadline(a)" [disabled]="!canSaveDeadline(a)"
+                          class="flex-1 py-0.5 bg-nc-ink text-white text-[10.5px] font-medium rounded-sm disabled:opacity-50">
+                          {{ savingDeadlineActionId() === a.id ? 'Salvando…' : 'Salvar' }}
+                        </button>
+                        <button (click)="cancelDeadlineEdit()"
+                          class="flex-1 py-0.5 border border-nc-line-strong text-[10.5px] rounded-sm hover:bg-nc-panel">
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  } @else {
+                    <div class="flex items-center gap-1">
+                      <span class="font-mono text-nc-ink-3">{{ a.deadline | date:'dd/MM/yyyy' }}</span>
+                      @if (canEditAction(a)) {
+                        <button (click)="openDeadlineEdit(a)" title="Editar prazo"
+                          class="p-0.5 text-nc-muted hover:text-nc-ink transition-colors">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                          </svg>
+                        </button>
+                      }
+                    </div>
+                  }
+                </td>
                 <td class="px-3 py-3">
                   @if (a.status === StatusCa.CONCLUIDA) {
                     <span class="px-2 py-0.5 bg-nc-ok/10 text-nc-ok text-[11px] font-semibold uppercase tracking-wider rounded-sm">
@@ -413,27 +457,54 @@
       </div>
       <div class="p-4">
         @if (canEditDueDate()) {
-          <div class="relative">
-            <input [ngModel]="dueDateLocal" (ngModelChange)="onNcDueDateChange($event)" (blur)="saveDueDate()"
-              type="text" inputmode="numeric" placeholder="dd/MM/aaaa"
-              class="w-full pl-9 pr-2 py-1.5 border border-nc-line-strong text-[12.5px] rounded-sm outline-none focus:border-nc-ink"
-              [class]="isOverdue() ? 'text-nc-critical' : ''" />
-            <span class="absolute inset-y-0 left-0 w-8 flex items-center justify-center text-nc-muted pointer-events-none">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M8 2v4m8-4v4M3 10h18M5 6h14a2 2 0 012 2v11a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z" />
-              </svg>
-            </span>
-            <input #ncDueDatePicker type="date"
-              class="absolute inset-y-0 left-0 w-8 opacity-0 cursor-pointer"
-              aria-label="Abrir calendário"
-              (change)="onNcDueDatePicked(ncDueDatePicker.value)" />
-          </div>
-          @if (!dueDateLocal) {
-            <div class="mt-1 text-[11.5px] text-nc-muted italic">Prazo não definido</div>
-          }
-          @if (dueDateError()) {
-            <div class="mt-1 text-[11.5px] text-nc-critical">{{ dueDateError() }}</div>
+          @if (!editingDueDate()) {
+            <div class="flex items-center justify-between">
+              @if (n.dueDate) {
+                <div class="text-[12.5px] font-mono font-semibold" [class]="isOverdue() ? 'text-nc-critical' : 'text-nc-ink'">
+                  {{ n.dueDate | date:'dd/MM/yyyy HH:mm' }}
+                </div>
+              } @else {
+                <div class="text-[12px] text-nc-muted italic">Não definido</div>
+              }
+              <button (click)="openDueDateEdit()" title="Editar prazo"
+                class="p-1 text-nc-muted hover:text-nc-ink transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                </svg>
+              </button>
+            </div>
+          } @else {
+            <div class="relative">
+              <input [ngModel]="dueDateLocal()" (ngModelChange)="onNcDueDateChange($event)"
+                type="text" inputmode="numeric" placeholder="dd/MM/aaaa"
+                class="w-full pl-9 pr-2 py-1.5 border border-nc-line-strong text-[12.5px] rounded-sm outline-none focus:border-nc-ink"
+                [class]="isOverdue() ? 'text-nc-critical' : ''" />
+              <span class="absolute inset-y-0 left-0 w-8 flex items-center justify-center text-nc-muted pointer-events-none">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M8 2v4m8-4v4M3 10h18M5 6h14a2 2 0 012 2v11a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z" />
+                </svg>
+              </span>
+              <input #ncDueDatePicker type="date"
+                [value]="dueDateForPicker()"
+                class="absolute inset-y-0 left-0 w-8 opacity-0 cursor-pointer"
+                aria-label="Abrir calendário"
+                (change)="onNcDueDatePicked(ncDueDatePicker.value)" />
+            </div>
+            @if (dueDateError()) {
+              <div class="mt-1 text-[11.5px] text-nc-critical">{{ dueDateError() }}</div>
+            }
+            <div class="flex gap-2 mt-2">
+              <button (click)="saveDueDate()" [disabled]="!canSaveDueDate()"
+                class="flex-1 py-1 bg-nc-ink text-white text-[11px] font-medium rounded-sm disabled:opacity-50">
+                {{ savingDueDate() ? 'Salvando…' : 'Salvar' }}
+              </button>
+              <button (click)="cancelDueDateEdit()"
+                class="flex-1 py-1 border border-nc-line-strong text-[11px] rounded-sm hover:bg-nc-panel">
+                Cancelar
+              </button>
+            </div>
           }
         } @else if (n.dueDate) {
           <div class="text-[12.5px] font-mono font-semibold" [class]="isOverdue() ? 'text-nc-critical' : 'text-nc-ink'">

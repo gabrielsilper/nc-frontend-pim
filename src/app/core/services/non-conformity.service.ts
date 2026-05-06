@@ -62,8 +62,10 @@ export class NonConformityService {
     return this.http.patch<ResponseNonConformityDTO>(`${this.base}/${id}/assign`, dto);
   }
 
-  updateDueDate(id: string, date: string) {
-    return this.http.patch<ResponseNonConformityDTO>(`${this.base}/${id}/due-date/${date}`, {});
+  updateDueDate(id: string, dateTime: string) {
+    return this.http.patch<ResponseNonConformityDTO>(
+      `${this.base}/${id}/due-date/${encodeURIComponent(dateTime)}`, {}
+    );
   }
 
   correctiveActions(ncId: string) {

@@ -126,4 +126,5 @@ export interface CreateCorrectiveActionDTO {
 export interface UpdateCorrectiveActionDTO {
   status?: StatusCa;
   evidence?: string;
+  deadline?: string;
 }

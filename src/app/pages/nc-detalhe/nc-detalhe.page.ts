@@ -27,6 +27,7 @@ import { OverdueBadgeComponent } from '../../shared/components/overdue-badge/ove
 import {
   applyBrDateMask,
   brDateToDateOnly,
+  brDateToEndOfDayIso,
   brDateToIsoString,
   isValidBrDate,
   isoToBrDateInput,
@@ -92,7 +93,12 @@ export class NcDetalhePage {
   assignDueDate = '';
 
   rootCause = signal('');
-  dueDateLocal = '';
+  dueDateLocal = signal('');
+  editingDueDate = signal(false);
+
+  editingDeadlineActionId = signal<string | null>(null);
+  editingDeadlineDraft = '';
+  savingDeadlineActionId = signal<string | null>(null);
 
   newActionDesc = '';
   newActionDeadline = '';
@@ -147,6 +153,13 @@ export class NcDetalhePage {
     const current = this.rootCause().trim();
     const saved = this.nc()?.rootCause?.trim() ?? '';
     return current.length > 0 && current !== saved;
+  });
+
+  canSaveDueDate = computed(() => {
+    if (!this.canEditDueDate() || this.savingDueDate()) return false;
+    const local = this.dueDateLocal();
+    if (!isValidBrDate(local)) return false;
+    return local !== isoToBrDateInput(this.nc()?.dueDate);
   });
 
   allowed = computed(() => {
@@ -300,22 +313,42 @@ export class NcDetalhePage {
     });
   }
 
+  dueDateForPicker(): string {
+    return brDateToDateOnly(this.dueDateLocal()) ?? '';
+  }
+
+  deadlineDraftForPicker(): string {
+    return brDateToDateOnly(this.editingDeadlineDraft) ?? '';
+  }
+
+  openDueDateEdit() {
+    this.dueDateLocal.set(isoToBrDateInput(this.nc()?.dueDate));
+    this.dueDateError.set('');
+    this.editingDueDate.set(true);
+  }
+
+  cancelDueDateEdit() {
+    this.editingDueDate.set(false);
+    this.dueDateError.set('');
+  }
+
   saveDueDate() {
     const n = this.nc();
-    if (!n || !this.canEditDueDate() || !this.dueDateLocal.trim()) return;
+    if (!n || !this.canEditDueDate()) return;
 
-    const dueDate = brDateToDateOnly(this.dueDateLocal);
-    if (!dueDate) {
+    const dateTime = brDateToEndOfDayIso(this.dueDateLocal());
+    if (!dateTime) {
       this.dueDateError.set('Informe uma data válida no formato dd/MM/aaaa.');
       return;
     }
 
     this.dueDateError.set('');
     this.savingDueDate.set(true);
-    this.svc.updateDueDate(n.id, dueDate).subscribe({
+    this.svc.updateDueDate(n.id, dateTime).subscribe({
       next: (updated) => {
         this.applyNcState(updated);
         this.savingDueDate.set(false);
+        this.editingDueDate.set(false);
       },
       error: (e: HttpErrorResponse) => {
         this.dueDateError.set(e.error?.message ?? 'Erro ao atualizar prazo.');
@@ -529,6 +562,7 @@ export class NcDetalhePage {
       error: (e: HttpErrorResponse) => {
         this.actionError.set(e.error?.message ?? 'Erro ao atualizar ação corretiva.');
         this.updatingActionId.set(null);
+        this.savingDeadlineActionId.set(null);
       },
     });
   }
@@ -545,7 +579,7 @@ export class NcDetalhePage {
 
   onNcDueDateChange(value: string) {
     if (!this.canEditDueDate()) return;
-    this.dueDateLocal = applyBrDateMask(value);
+    this.dueDateLocal.set(applyBrDateMask(value));
     this.dueDateError.set('');
   }
 
@@ -561,14 +595,55 @@ export class NcDetalhePage {
 
   onNcDueDatePicked(value: string) {
     if (!this.canEditDueDate()) return;
-    this.dueDateLocal = isoToBrDateInput(value);
+    this.dueDateLocal.set(isoToBrDateInput(value));
     this.dueDateError.set('');
-    this.saveDueDate();
   }
 
   onActionDeadlinePicked(value: string) {
     this.newActionDeadline = isoToBrDateInput(value);
     this.actionError.set('');
+  }
+
+  openDeadlineEdit(a: ResponseCorrectiveActionDTO) {
+    this.editingDeadlineDraft = isoToBrDateInput(a.deadline);
+    this.actionError.set('');
+    this.editingDeadlineActionId.set(a.id);
+  }
+
+  cancelDeadlineEdit() {
+    this.editingDeadlineActionId.set(null);
+    this.editingDeadlineDraft = '';
+  }
+
+  onDeadlineDraftChange(value: string) {
+    this.editingDeadlineDraft = applyBrDateMask(value);
+    this.actionError.set('');
+  }
+
+  onDeadlineDraftPicked(value: string) {
+    this.editingDeadlineDraft = isoToBrDateInput(value);
+    this.actionError.set('');
+  }
+
+  canSaveDeadline(a: ResponseCorrectiveActionDTO): boolean {
+    if (this.savingDeadlineActionId() === a.id) return false;
+    if (!isValidBrDate(this.editingDeadlineDraft)) return false;
+    return this.editingDeadlineDraft !== isoToBrDateInput(a.deadline);
+  }
+
+  saveDeadline(a: ResponseCorrectiveActionDTO) {
+    const dateTime = brDateToEndOfDayIso(this.editingDeadlineDraft);
+    if (!dateTime) {
+      this.actionError.set('Informe uma data válida no formato dd/MM/aaaa.');
+      return;
+    }
+    this.savingDeadlineActionId.set(a.id);
+    this.actionError.set('');
+    this.updateAction(a, { deadline: dateTime }, () => {
+      this.editingDeadlineActionId.set(null);
+      this.editingDeadlineDraft = '';
+      this.savingDeadlineActionId.set(null);
+    });
   }
 
   canConfirmAssign(): boolean {
@@ -658,7 +733,7 @@ export class NcDetalhePage {
   private applyNcState(n: ResponseNonConformityDTO) {
     this.nc.set(n);
     this.rootCause.set(n.rootCause ?? '');
-    this.dueDateLocal = isoToBrDateInput(n.dueDate);
+    this.dueDateLocal.set(isoToBrDateInput(n.dueDate));
 
     if (n.status === StatusNc.ENCERRADA) {
       this.showEdit.set(false);
