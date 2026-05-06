@@ -3,6 +3,23 @@ import { SeverityNc } from './severity-nc.enum';
 import { StatusNc } from './status-nc.enum';
 import { TypeNc } from './type-nc.enum';
 
+export enum NcHistoryEventType {
+  CREATED = 0,
+  STATUS_CHANGED = 1,
+  ASSIGNEE_SET = 2,
+  ASSIGNEE_CHANGED = 3,
+  DUE_DATE_UPDATED = 4,
+  FIELDS_UPDATED = 5,
+}
+
+export interface ResponseNcHistoryDTO {
+  id: string;
+  eventType: NcHistoryEventType;
+  actor: EmbeddedUserDTO;
+  metadata: Record<string, unknown> | null;
+  occurredAt: string;
+}
+
 export interface EmbeddedUserDTO {
   id: string;
   name: string;

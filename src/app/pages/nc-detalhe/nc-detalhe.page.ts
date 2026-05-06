@@ -8,7 +8,9 @@ import { NonConformityService } from '../../core/services/non-conformity.service
 import { UserService } from '../../core/services/user.service';
 import {
   CreateCorrectiveActionDTO,
+  NcHistoryEventType,
   ResponseCorrectiveActionDTO,
+  ResponseNcHistoryDTO,
   ResponseNonConformityDTO,
   STATUS_CA_LABEL,
   StatusCa,
@@ -29,6 +31,16 @@ import {
   isValidBrDate,
   isoToBrDateInput,
 } from '../../core/utils/br-date-input.util';
+
+const FIELD_LABEL: Record<string, string> = {
+  title: 'Título',
+  description: 'Descrição',
+  type: 'Tipo',
+  severity: 'Gravidade',
+  processLine: 'Linha',
+  department: 'Setor',
+  rootCause: 'Causa raiz',
+};
 
 const TIMELINE_STEPS: StatusNc[] = [
   StatusNc.ABERTA,
@@ -60,6 +72,8 @@ export class NcDetalhePage {
 
   nc = signal<ResponseNonConformityDTO | null>(null);
   actions = signal<ResponseCorrectiveActionDTO[]>([]);
+  history = signal<ResponseNcHistoryDTO[]>([]);
+  showAllHistory = signal(false);
 
   showEdit = signal(false);
   showActionForm = signal(false);
@@ -103,6 +117,12 @@ export class NcDetalhePage {
   readonly timelineSteps = TIMELINE_STEPS;
 
   currentUser = this.auth.currentUser;
+
+  visibleHistory = computed(() => {
+    const all = [...this.history()].reverse();
+    return this.showAllHistory() ? all : all.slice(0, 5);
+  });
+  hasMoreHistory = computed(() => this.history().length > 5);
 
   isNcClosed = computed(() => this.nc()?.status === StatusNc.ENCERRADA);
   isNcCanceled = computed(() => this.nc()?.status === StatusNc.CANCELADA);
@@ -194,13 +214,14 @@ export class NcDetalhePage {
     { value: TypeNc.OUTRO, label: 'Outro' },
   ];
 
+  readonly NcHistoryEventType = NcHistoryEventType;
+
   constructor() {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
-      this.svc.byId(id).subscribe((n) => {
-        this.applyNcState(n);
-      });
+      this.svc.byId(id).subscribe((n) => this.applyNcState(n));
       this.svc.correctiveActions(id).subscribe((a) => this.actions.set(a));
+      this.svc.history(id).subscribe((h) => this.history.set(h));
     }
   }
 
@@ -600,6 +621,38 @@ export class NcDetalhePage {
     }
 
     return 'Você não tem permissão para avançar este status.';
+  }
+
+  historyEventDescription(event: ResponseNcHistoryDTO): string {
+    const m = event.metadata;
+    switch (event.eventType) {
+      case NcHistoryEventType.CREATED:
+        return 'Registrou a não conformidade';
+      case NcHistoryEventType.STATUS_CHANGED:
+        return `Alterou status de ${STATUS_LABEL[m?.['previousStatus'] as StatusNc]} para ${STATUS_LABEL[m?.['newStatus'] as StatusNc]}`;
+      case NcHistoryEventType.ASSIGNEE_SET:
+        return `Atribuiu ${m?.['assigneeName']} como responsável`;
+      case NcHistoryEventType.ASSIGNEE_CHANGED:
+        return `Transferiu responsabilidade para ${m?.['newAssigneeName']}`;
+      case NcHistoryEventType.DUE_DATE_UPDATED:
+        return 'Atualizou o prazo da NC';
+      case NcHistoryEventType.FIELDS_UPDATED: {
+        const labels = (m?.['fields'] as string[] ?? [])
+          .map((f) => FIELD_LABEL[f] ?? f)
+          .join(', ');
+        return `Editou: ${labels}`;
+      }
+      default:
+        return 'Evento registrado';
+    }
+  }
+
+  historyEventDotClass(eventType: NcHistoryEventType): string {
+    switch (eventType) {
+      case NcHistoryEventType.CREATED: return 'bg-nc-ok';
+      case NcHistoryEventType.STATUS_CHANGED: return 'bg-nc-accent';
+      default: return 'bg-nc-line-strong';
+    }
   }
 
   private applyNcState(n: ResponseNonConformityDTO) {

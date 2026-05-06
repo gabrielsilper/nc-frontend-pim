@@ -7,6 +7,7 @@ import {
   CreateNonConformityDTO,
   FindNonConformitiesQuery,
   ResponseCorrectiveActionDTO,
+  ResponseNcHistoryDTO,
   ResponseNonConformitiesPageDTO,
   ResponseNonConformityDTO,
   UpdateCorrectiveActionDTO,
@@ -75,5 +76,9 @@ export class NonConformityService {
 
   updateCorrectiveAction(ncId: string, caId: string, dto: UpdateCorrectiveActionDTO) {
     return this.http.patch<ResponseCorrectiveActionDTO>(`${this.base}/${ncId}/corrective-actions/${caId}`, dto);
+  }
+
+  history(ncId: string) {
+    return this.http.get<ResponseNcHistoryDTO[]>(`${this.base}/${ncId}/history`);
   }
 }

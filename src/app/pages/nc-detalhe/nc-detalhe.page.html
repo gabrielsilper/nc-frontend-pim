@@ -555,37 +555,39 @@
       </div>
     </section>
 
-    <!-- Histórico (mocked — ver REVIEW-TO-DO #10) -->
+    <!-- Histórico -->
     <section class="bg-white border border-nc-line rounded-sm">
-      <div class="px-4 py-3 border-b border-nc-line">
+      <div class="px-4 py-3 border-b border-nc-line flex items-center justify-between">
         <div class="text-[13px] font-semibold">Histórico</div>
+        @if (history().length > 0) {
+          <span class="font-mono text-[10px] text-nc-muted">{{ history().length }} eventos</span>
+        }
       </div>
-      <div class="p-4 flex flex-col gap-3">
-        <div class="flex gap-3 items-start">
-          <div class="w-2 h-2 rounded-full bg-nc-accent mt-1.5 shrink-0"></div>
-          <div>
-            <div class="text-[12px] text-nc-ink">Atualizou prazo</div>
-            <div class="font-mono text-[10px] text-nc-muted">hoje · sistema</div>
-          </div>
+
+      @if (history().length === 0) {
+        <div class="px-4 py-6 text-center text-[12px] text-nc-muted italic">Nenhum evento registrado.</div>
+      } @else {
+        <div class="p-4 flex flex-col gap-3">
+          @for (event of visibleHistory(); track event.id) {
+            <div class="flex gap-3 items-start">
+              <div class="w-2 h-2 rounded-full mt-1.5 shrink-0" [class]="historyEventDotClass(event.eventType)"></div>
+              <div class="min-w-0">
+                <div class="text-[12px] text-nc-ink leading-snug">{{ historyEventDescription(event) }}</div>
+                <div class="font-mono text-[10px] text-nc-muted mt-0.5">
+                  {{ event.occurredAt | date:'dd/MM/yyyy HH:mm' }} · {{ event.actor.name }}
+                </div>
+              </div>
+            </div>
+          }
+
+          @if (hasMoreHistory() && !showAllHistory()) {
+            <button (click)="showAllHistory.set(true)"
+              class="mt-1 text-[11px] text-nc-accent font-medium hover:underline text-left">
+              Ver todo o histórico ({{ history().length }} eventos)
+            </button>
+          }
         </div>
-        <div class="flex gap-3 items-start">
-          <div class="w-2 h-2 rounded-full bg-nc-line-strong mt-1.5 shrink-0"></div>
-          <div>
-            <div class="text-[12px] text-nc-ink">Alterou status de <b>Aberta</b> para <b>Em tratamento</b></div>
-            <div class="font-mono text-[10px] text-nc-muted">{{ n.openedAt | date:'dd/MM HH:mm' }} · sistema</div>
-          </div>
-        </div>
-        <div class="flex gap-3 items-start">
-          <div class="w-2 h-2 rounded-full bg-nc-line-strong mt-1.5 shrink-0"></div>
-          <div>
-            <div class="text-[12px] text-nc-ink">Registrou não conformidade</div>
-            <div class="font-mono text-[10px] text-nc-muted">{{ n.openedAt | date:'dd/MM HH:mm' }} · sistema</div>
-          </div>
-        </div>
-        <div class="pt-1 font-mono text-[10px] text-nc-muted italic">
-          Histórico completo disponível em breve.
-        </div>
-      </div>
+      }
     </section>
 
   </aside>
