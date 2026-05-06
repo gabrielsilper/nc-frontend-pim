@@ -1,14 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { DashboardService } from '../../core/services/dashboard.service';
 import { NonConformityService } from '../../core/services/non-conformity.service';
+import { NcFilterStateService } from '../../core/services/nc-filter-state.service';
 import { DashboardCountsDTO, RankingItemDTO } from '../../core/models/dashboard.model';
 import { ResponseNonConformityDTO } from '../../core/models/non-conformity.model';
+import { SeverityNc } from '../../core/models/severity-nc.enum';
+import { StatusNc } from '../../core/models/status-nc.enum';
 import { SeverityBadgeComponent } from '../../shared/components/severity-badge/severity-badge.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
 import { OverdueBadgeComponent } from '../../shared/components/overdue-badge/overdue-badge.component';
-import { StatusNc } from '../../core/models/status-nc.enum';
 
 interface RecentNc extends ResponseNonConformityDTO {
   openedAtLabel: string;
@@ -26,6 +28,7 @@ interface KpiCard {
   accentCls: string;
   icon: string;
   iconCls: string;
+  clickFn: () => void;
 }
 
 @Component({
@@ -37,6 +40,8 @@ interface KpiCard {
 export class DashboardPage {
   private dashboardService = inject(DashboardService);
   private nonConformityService = inject(NonConformityService);
+  private ncFilters = inject(NcFilterStateService);
+  private router = inject(Router);
 
   counts = signal<DashboardCountsDTO | null>(null);
   recent = signal<RecentNc[]>([]);
@@ -45,10 +50,38 @@ export class DashboardPage {
   kpis = computed<KpiCard[]>(() => {
     const c = this.counts();
     return [
-      { label: 'NCs ABERTAS',              value: c?.openNonConformities ?? '—',     accentCls: 'bg-nc-ink',      icon: 'list_alt',  iconCls: 'text-nc-ink' },
-      { label: 'CRÍTICAS/ALTAS EM ABERTO', value: c?.warningNonConformities ?? '—',  accentCls: 'bg-nc-critical', icon: 'warning',   iconCls: 'text-nc-critical' },
-      { label: 'PRAZO VENCIDO',            value: c?.expiredNonConformities ?? '—',  accentCls: 'bg-nc-accent',   icon: 'schedule',  iconCls: 'text-nc-accent' },
-      { label: 'ENCERRADAS NO MÊS',        value: c?.closedNonConformities ?? '—',   accentCls: 'bg-nc-ok',       icon: 'task_alt',  iconCls: 'text-nc-ok' },
+      {
+        label: 'NCs ABERTAS',
+        value: c?.openNonConformities ?? '—',
+        accentCls: 'bg-nc-ink',
+        icon: 'list_alt',
+        iconCls: 'text-nc-ink',
+        clickFn: () => this.goToList({ status: StatusNc.ABERTA }),
+      },
+      {
+        label: 'CRÍTICAS/ALTAS EM ABERTO',
+        value: c?.warningNonConformities ?? '—',
+        accentCls: 'bg-nc-critical',
+        icon: 'warning',
+        iconCls: 'text-nc-critical',
+        clickFn: () => this.goToList({ severity: SeverityNc.CRITICA }),
+      },
+      {
+        label: 'PRAZO VENCIDO',
+        value: c?.expiredNonConformities ?? '—',
+        accentCls: 'bg-nc-accent',
+        icon: 'schedule',
+        iconCls: 'text-nc-accent',
+        clickFn: () => this.goToList({ expired: 1 }),
+      },
+      {
+        label: 'ENCERRADAS NO MÊS',
+        value: c?.closedNonConformities ?? '—',
+        accentCls: 'bg-nc-ok',
+        icon: 'task_alt',
+        iconCls: 'text-nc-ok',
+        clickFn: () => this.goToList({ status: StatusNc.ENCERRADA }),
+      },
     ];
   });
 
@@ -74,11 +107,23 @@ export class DashboardPage {
     });
   }
 
+  reviewExpired() {
+    this.goToList({ expired: 1 });
+  }
+
+  private goToList(filters: { status?: StatusNc; severity?: SeverityNc; expired?: 0 | 1 }) {
+    this.ncFilters.clear();
+    if (filters.status !== undefined) this.ncFilters.statusFilter.set(filters.status);
+    if (filters.severity !== undefined) this.ncFilters.severityFilter.set(filters.severity);
+    if (filters.expired !== undefined) this.ncFilters.expiredFilter.set(filters.expired);
+    this.router.navigate(['/app/ncs'], { state: { keepFilters: true } });
+  }
+
   private formatBrDate(iso: string): string {
     return new Date(iso).toLocaleDateString('pt-BR');
   }
 
-  private isOverdue(dueDate?: string, status?:StatusNc, closedAt?: string | null): boolean {
+  private isOverdue(dueDate?: string, status?: StatusNc, closedAt?: string | null): boolean {
     if (!dueDate || closedAt) return false;
     if (!status || status === StatusNc.CANCELADA) return false;
     return new Date(dueDate).getTime() < Date.now();

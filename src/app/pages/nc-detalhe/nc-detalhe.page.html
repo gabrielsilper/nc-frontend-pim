@@ -3,7 +3,7 @@
 <!-- Header -->
 <div class="h-14 bg-white border-b border-nc-line px-6 flex items-center gap-3 flex-shrink-0 sticky top-0 z-10">
   <div class="flex items-center gap-2 min-w-0 flex-1">
-    <a routerLink="/app/ncs" class="font-mono text-[11px] text-nc-muted hover:text-nc-ink-2 shrink-0">
+    <a [routerLink]="['/app/ncs']" [state]="{ keepFilters: true }" class="font-mono text-[11px] text-nc-muted hover:text-nc-ink-2 shrink-0">
       NCS
     </a>
     <span class="font-mono text-[11px] text-nc-muted shrink-0">/</span>

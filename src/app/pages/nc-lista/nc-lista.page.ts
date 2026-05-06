@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { NonConformityService } from '../../core/services/non-conformity.service';
+import { NcFilterStateService } from '../../core/services/nc-filter-state.service';
 import { ResponseNonConformitiesPageDTO, ResponseNonConformityDTO } from '../../core/models/non-conformity.model';
 import { SeverityNc, SEVERITY_LABEL } from '../../core/models/severity-nc.enum';
 import { StatusNc, STATUS_LABEL } from '../../core/models/status-nc.enum';
@@ -25,16 +26,29 @@ interface NcRow extends ResponseNonConformityDTO {
 })
 export class NcListaPage {
   private svc = inject(NonConformityService);
+  private router = inject(Router);
+  private filters = inject(NcFilterStateService);
 
-  search = '';
-  statusFilter: StatusNc | null = null;
-  severityFilter: SeverityNc | null = null;
-  typeFilter: TypeNc | null = null;
-  expiredFilter: 0 | 1 | null = null;
+  // Getters/setters para compatibilidade com [(ngModel)]
+  get search() { return this.filters.search(); }
+  set search(val: string) { this.filters.search.set(val); }
 
-  currentPage = signal(1);
-  pageSize = signal(20);
-  order = signal<'ASC' | 'DESC'>('DESC');
+  get statusFilter() { return this.filters.statusFilter(); }
+  set statusFilter(val: StatusNc | null) { this.filters.statusFilter.set(val); }
+
+  get severityFilter() { return this.filters.severityFilter(); }
+  set severityFilter(val: SeverityNc | null) { this.filters.severityFilter.set(val); }
+
+  get typeFilter() { return this.filters.typeFilter(); }
+  set typeFilter(val: TypeNc | null) { this.filters.typeFilter.set(val); }
+
+  get expiredFilter() { return this.filters.expiredFilter(); }
+  set expiredFilter(val: 0 | 1 | null) { this.filters.expiredFilter.set(val); }
+
+  // Aliases diretos dos sinais do serviço
+  currentPage = this.filters.currentPage;
+  pageSize = this.filters.pageSize;
+  order = this.filters.order;
 
   pageData = signal<ResponseNonConformitiesPageDTO | null>(null);
 
@@ -63,60 +77,60 @@ export class NcListaPage {
   pageSizeOptions = [10, 20, 50];
 
   constructor() {
+    const nav = this.router.lastSuccessfulNavigation();
+    const keep = nav?.extras?.state?.['keepFilters'] === true || nav?.trigger === 'popstate';
+    if (!keep) {
+      this.filters.clear();
+    }
     this.load();
   }
 
   load() {
     this.svc.list({
-      page: this.currentPage(),
-      pageSize: this.pageSize(),
-      order: this.order(),
-      search: this.search || undefined,
-      status: this.statusFilter ?? undefined,
-      severity: this.severityFilter ?? undefined,
-      type: this.typeFilter ?? undefined,
-      expired: this.expiredFilter ?? undefined,
+      page: this.filters.currentPage(),
+      pageSize: this.filters.pageSize(),
+      order: this.filters.order(),
+      search: this.filters.search() || undefined,
+      status: this.filters.statusFilter() ?? undefined,
+      severity: this.filters.severityFilter() ?? undefined,
+      type: this.filters.typeFilter() ?? undefined,
+      expired: this.filters.expiredFilter() ?? undefined,
     }).subscribe((data) => this.pageData.set(data));
   }
 
   applyFilters() {
-    this.currentPage.set(1);
+    this.filters.currentPage.set(1);
     this.load();
   }
 
   clear() {
-    this.search = '';
-    this.statusFilter = null;
-    this.severityFilter = null;
-    this.typeFilter = null;
-    this.expiredFilter = null;
-    this.currentPage.set(1);
+    this.filters.clear();
     this.load();
   }
 
   prevPage() {
     if (this.hasPrev()) {
-      this.currentPage.update((p) => p - 1);
+      this.filters.currentPage.update((p) => p - 1);
       this.load();
     }
   }
 
   nextPage() {
     if (this.hasNext()) {
-      this.currentPage.update((p) => p + 1);
+      this.filters.currentPage.update((p) => p + 1);
       this.load();
     }
   }
 
   changePageSize(size: number) {
-    this.pageSize.set(size);
-    this.currentPage.set(1);
+    this.filters.pageSize.set(size);
+    this.filters.currentPage.set(1);
     this.load();
   }
 
   toggleOrder() {
-    this.order.update((o) => (o === 'DESC' ? 'ASC' : 'DESC'));
-    this.currentPage.set(1);
+    this.filters.order.update((o) => (o === 'DESC' ? 'ASC' : 'DESC'));
+    this.filters.currentPage.set(1);
     this.load();
   }
 

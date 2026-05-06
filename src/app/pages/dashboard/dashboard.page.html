@@ -21,7 +21,10 @@
 <div class="p-6">
   <div class="grid grid-cols-4 gap-3 mb-5">
     @for (k of kpis(); track k.label) {
-      <div class="relative bg-nc-surface border border-nc-line p-4 rounded-sm overflow-hidden">
+      <div
+        class="relative bg-nc-surface border border-nc-line p-4 rounded-sm overflow-hidden cursor-pointer hover:bg-nc-panel transition-colors"
+        (click)="k.clickFn()"
+      >
         <div class="absolute left-0 top-0 bottom-0 w-0.75" [class]="k.accentCls"></div>
         <div class="font-mono text-[10px] text-nc-ink-3 tracking-widest mb-2.5">{{ k.label }}</div>
         <div class="font-mono text-[38px] font-semibold tracking-[-0.04em] leading-none flex items-center gap-2">
@@ -124,10 +127,11 @@
           </div>
           <p class="text-[12.5px] text-nc-ink-2 leading-snug m-0">
             {{ expiredCount() }} não conformidades ultrapassaram o prazo de encerramento.
-            Reatribua responsáveis ou justifique a prorrogação.
+            Reatribua responsáveis ou prorrogue os prazos.
           </p>
           <button
             type="button"
+            (click)="reviewExpired()"
             class="mt-3 px-3 py-1.5 border border-nc-critical text-nc-critical text-[11.5px] font-medium rounded-sm hover:bg-nc-critical/5"
           >
             Revisar pendências
