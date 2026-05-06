@@ -43,7 +43,7 @@ export class NcListaPage {
       ...n,
       openedAtLabel: this.formatBrDate(n.openedAt),
       dueDateLabel: n.dueDate ? this.formatBrDate(n.dueDate) : undefined,
-      isOverdue: this.isOverdue(n.dueDate, n.closedAt),
+      isOverdue: this.isOverdue(n.dueDate, n.status, n.closedAt),
     })),
   );
 
@@ -124,8 +124,9 @@ export class NcListaPage {
     return new Date(iso).toLocaleDateString('pt-BR');
   }
 
-  private isOverdue(dueDate?: string, closedAt?: string | null): boolean {
+  private isOverdue(dueDate?: string, status?: StatusNc, closedAt?: string | null): boolean {
     if (!dueDate || closedAt) return false;
+    if (status === undefined || status === null || status === StatusNc.CANCELADA) return false;
     return new Date(dueDate).getTime() < Date.now();
   }
 }

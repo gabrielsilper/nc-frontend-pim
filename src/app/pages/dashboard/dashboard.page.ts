@@ -8,6 +8,7 @@ import { ResponseNonConformityDTO } from '../../core/models/non-conformity.model
 import { SeverityBadgeComponent } from '../../shared/components/severity-badge/severity-badge.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
 import { OverdueBadgeComponent } from '../../shared/components/overdue-badge/overdue-badge.component';
+import { StatusNc } from '../../core/models/status-nc.enum';
 
 interface RecentNc extends ResponseNonConformityDTO {
   openedAtLabel: string;
@@ -67,7 +68,7 @@ export class DashboardPage {
           ...n,
           openedAtLabel: this.formatBrDate(n.openedAt),
           dueDateLabel: n.dueDate ? this.formatBrDate(n.dueDate) : undefined,
-          isOverdue: this.isOverdue(n.dueDate, n.closedAt),
+          isOverdue: this.isOverdue(n.dueDate, n.status, n.closedAt),
         })),
       );
     });
@@ -77,8 +78,9 @@ export class DashboardPage {
     return new Date(iso).toLocaleDateString('pt-BR');
   }
 
-  private isOverdue(dueDate?: string, closedAt?: string | null): boolean {
+  private isOverdue(dueDate?: string, status?:StatusNc, closedAt?: string | null): boolean {
     if (!dueDate || closedAt) return false;
+    if (!status || status === StatusNc.CANCELADA) return false;
     return new Date(dueDate).getTime() < Date.now();
   }
 }
