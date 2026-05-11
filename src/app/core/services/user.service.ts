@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { CreateUserDTO, ResponseUserDTO, UpdateUserDTO } from '../models/user.model';
 
@@ -12,8 +12,11 @@ export class UserService {
     return this.http.get<ResponseUserDTO>(`${this.base}/${id}`);
   }
 
-  listAll() {
-    return this.http.get<ResponseUserDTO[]>(this.base);
+  listAll(params?: { profile?: number; search?: string }) {
+    let httpParams = new HttpParams();
+    if (params?.profile !== undefined) httpParams = httpParams.set('profile', params.profile);
+    if (params?.search) httpParams = httpParams.set('search', params.search);
+    return this.http.get<ResponseUserDTO[]>(this.base, { params: httpParams });
   }
 
   create(dto: CreateUserDTO) {

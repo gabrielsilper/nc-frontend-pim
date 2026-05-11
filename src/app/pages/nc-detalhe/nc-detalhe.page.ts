@@ -28,7 +28,6 @@ import {
   applyBrDateMask,
   brDateToDateOnly,
   brDateToEndOfDayIso,
-  brDateToIsoString,
   isValidBrDate,
   isoToBrDateInput,
 } from '../../core/utils/br-date-input.util';
@@ -139,12 +138,15 @@ export class NcDetalhePage {
       this.currentUser()?.profile === Profile.GESTOR,
   );
   canEditNc = computed(() => this.isResponsavel() && !this.isNcClosed() && !this.isNcCanceled());
-  canEditRootCause = computed(() => this.isResponsavel() && !this.isNcClosed() && !this.isNcCanceled());
+  canEditRootCause = computed(
+    () => this.isResponsavel() && !this.isNcClosed() && !this.isNcCanceled(),
+  );
   canEditDueDate = computed(() => this.isGestor() && !this.isNcClosed() && !this.isNcCanceled());
   canEditAssignment = computed(() => this.isGestor() && !this.isNcClosed() && !this.isNcCanceled());
   canManageActionPlan = computed(
     () =>
-      !this.isNcClosed() && !this.isNcCanceled() &&
+      !this.isNcClosed() &&
+      !this.isNcCanceled() &&
       (this.currentUser()?.profile === Profile.GESTOR ||
         (!!this.nc()?.assignedTo?.id && this.nc()?.assignedTo?.id === this.currentUser()?.id)),
   );
@@ -423,7 +425,7 @@ export class NcDetalhePage {
     this.selectedUserId = this.nc()?.assignedTo?.id ?? '';
     this.assignDueDate = isoToBrDateInput(this.nc()?.dueDate);
     this.assignError.set('');
-    this.userSvc.listAll().subscribe((list) => {
+    this.userSvc.listAll({ profile: Profile.RESPONSAVEL }).subscribe((list) => {
       this.users.set(list);
       this.showAssignForm.set(true);
     });
@@ -438,7 +440,7 @@ export class NcDetalhePage {
 
   confirmAssign() {
     const n = this.nc();
-    const dueDate = brDateToIsoString(this.assignDueDate);
+    const dueDate = brDateToEndOfDayIso(this.assignDueDate);
 
     if (!this.canEditAssignment() || !n || !this.selectedUserId || !dueDate) {
       this.assignError.set('Informe um responsável e um prazo válido antes de confirmar.');
@@ -464,7 +466,7 @@ export class NcDetalhePage {
 
   addAction() {
     const n = this.nc();
-    const deadline = brDateToIsoString(this.newActionDeadline);
+    const deadline = brDateToEndOfDayIso(this.newActionDeadline);
 
     if (!this.canManageActionPlan()) {
       this.actionError.set('NC encerrada nao permite alterar o plano de ação.');
@@ -712,7 +714,7 @@ export class NcDetalhePage {
       case NcHistoryEventType.DUE_DATE_UPDATED:
         return 'Atualizou o prazo da NC';
       case NcHistoryEventType.FIELDS_UPDATED: {
-        const labels = (m?.['fields'] as string[] ?? [])
+        const labels = ((m?.['fields'] as string[]) ?? [])
           .map((f) => FIELD_LABEL[f] ?? f)
           .join(', ');
         return `Editou: ${labels}`;
@@ -724,9 +726,12 @@ export class NcDetalhePage {
 
   historyEventDotClass(eventType: NcHistoryEventType): string {
     switch (eventType) {
-      case NcHistoryEventType.CREATED: return 'bg-nc-ok';
-      case NcHistoryEventType.STATUS_CHANGED: return 'bg-nc-accent';
-      default: return 'bg-nc-line-strong';
+      case NcHistoryEventType.CREATED:
+        return 'bg-nc-ok';
+      case NcHistoryEventType.STATUS_CHANGED:
+        return 'bg-nc-accent';
+      default:
+        return 'bg-nc-line-strong';
     }
   }
 
