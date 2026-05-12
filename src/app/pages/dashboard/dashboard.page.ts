@@ -51,7 +51,7 @@ export class DashboardPage {
     const c = this.counts();
     return [
       {
-        label: 'NCs ABERTAS',
+        label: 'ABERTAS',
         value: c?.openNonConformities ?? '—',
         accentCls: 'bg-nc-ink',
         icon: 'list_alt',

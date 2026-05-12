@@ -77,7 +77,7 @@ export class NcListaPage {
   pageSizeOptions = [10, 20, 50];
 
   constructor() {
-    const nav = this.router.lastSuccessfulNavigation();
+    const nav = this.router.getCurrentNavigation();
     const keep = nav?.extras?.state?.['keepFilters'] === true || nav?.trigger === 'popstate';
     if (!keep) {
       this.filters.clear();
