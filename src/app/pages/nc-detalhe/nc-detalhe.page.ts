@@ -28,6 +28,7 @@ import {
   applyBrDateMask,
   brDateToDateOnly,
   brDateToEndOfDayIso,
+  isBrDateInThePast,
   isValidBrDate,
   isoToBrDateInput,
 } from '../../core/utils/br-date-input.util';
@@ -122,6 +123,8 @@ export class NcDetalhePage {
   readonly timelineSteps = TIMELINE_STEPS;
 
   currentUser = this.auth.currentUser;
+  readonly todayIso = new Date().toISOString().split('T')[0];
+  readonly isBrDateInThePast = isBrDateInThePast;
 
   visibleHistory = computed(() => {
     const all = [...this.history()].reverse();
@@ -171,6 +174,7 @@ export class NcDetalhePage {
     if (!this.canEditDueDate() || this.savingDueDate()) return false;
     const local = this.dueDateLocal();
     if (!isValidBrDate(local)) return false;
+    if (isBrDateInThePast(local)) return false;
     return local !== isoToBrDateInput(this.nc()?.dueDate);
   });
 
@@ -644,6 +648,7 @@ export class NcDetalhePage {
   canSaveDeadline(a: ResponseCorrectiveActionDTO): boolean {
     if (this.savingDeadlineActionId() === a.id) return false;
     if (!isValidBrDate(this.editingDeadlineDraft)) return false;
+    if (isBrDateInThePast(this.editingDeadlineDraft)) return false;
     return this.editingDeadlineDraft !== isoToBrDateInput(a.deadline);
   }
 
@@ -663,7 +668,12 @@ export class NcDetalhePage {
   }
 
   canConfirmAssign(): boolean {
-    return this.canEditAssignment() && !!this.selectedUserId && isValidBrDate(this.assignDueDate);
+    return (
+      this.canEditAssignment() &&
+      !!this.selectedUserId &&
+      isValidBrDate(this.assignDueDate) &&
+      !isBrDateInThePast(this.assignDueDate)
+    );
   }
 
   canSaveAction(): boolean {
@@ -671,7 +681,8 @@ export class NcDetalhePage {
       this.canManageActionPlan() &&
       !!this.newActionDesc.trim() &&
       !!this.nc()?.assignedTo &&
-      isValidBrDate(this.newActionDeadline)
+      isValidBrDate(this.newActionDeadline) &&
+      !isBrDateInThePast(this.newActionDeadline)
     );
   }
 

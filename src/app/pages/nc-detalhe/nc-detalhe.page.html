@@ -292,10 +292,14 @@
                 </svg>
               </span>
               <input #actionDeadlinePicker type="date"
+                [min]="todayIso"
                 class="absolute inset-y-0 right-0 w-8 opacity-0 cursor-pointer"
                 aria-label="Abrir calendário"
                 (change)="onActionDeadlinePicked(actionDeadlinePicker.value)" />
             </div>
+            @if (isBrDateInThePast(newActionDeadline)) {
+              <div class="text-[11.5px] text-nc-critical">O prazo não pode ser uma data passada.</div>
+            }
             <button (click)="addAction()"
               [disabled]="savingAction() || !canSaveAction() || !canManageActionPlan()"
               class="px-3 py-1.5 bg-nc-ink text-white text-[12px] font-medium rounded-sm disabled:opacity-50">
@@ -367,10 +371,14 @@
                         </span>
                         <input #deadlineDraftPicker type="date"
                           [value]="deadlineDraftForPicker()"
+                          [min]="todayIso"
                           class="absolute inset-y-0 left-0 w-7 opacity-0 cursor-pointer"
                           aria-label="Abrir calendário"
                           (change)="onDeadlineDraftPicked(deadlineDraftPicker.value)" />
                       </div>
+                      @if (isBrDateInThePast(editingDeadlineDraft)) {
+                        <div class="text-[10.5px] text-nc-critical">O prazo não pode ser uma data passada.</div>
+                      }
                       <div class="flex gap-1">
                         <button (click)="saveDeadline(a)" [disabled]="!canSaveDeadline(a)"
                           class="flex-1 py-0.5 bg-nc-ink text-white text-[10.5px] font-medium rounded-sm disabled:opacity-50">
@@ -488,10 +496,14 @@
               </span>
               <input #ncDueDatePicker type="date"
                 [value]="dueDateForPicker()"
+                [min]="todayIso"
                 class="absolute inset-y-0 left-0 w-8 opacity-0 cursor-pointer"
                 aria-label="Abrir calendário"
                 (change)="onNcDueDatePicked(ncDueDatePicker.value)" />
             </div>
+            @if (isBrDateInThePast(dueDateLocal())) {
+              <div class="mt-1 text-[11.5px] text-nc-critical">O prazo não pode ser uma data passada.</div>
+            }
             @if (dueDateError()) {
               <div class="mt-1 text-[11.5px] text-nc-critical">{{ dueDateError() }}</div>
             }
@@ -580,10 +592,14 @@
                 </svg>
               </span>
               <input #assignDueDatePicker type="date"
+                [min]="todayIso"
                 class="absolute inset-y-0 left-0 w-8 opacity-0 cursor-pointer"
                 aria-label="Abrir calendário"
                 (change)="onAssignDueDatePicked(assignDueDatePicker.value)" />
             </div>
+            @if (isBrDateInThePast(assignDueDate)) {
+              <div class="text-[11.5px] text-nc-critical">O prazo não pode ser uma data passada.</div>
+            }
             @if (assignError()) {
               <div class="text-[11.5px] text-nc-critical">{{ assignError() }}</div>
             }

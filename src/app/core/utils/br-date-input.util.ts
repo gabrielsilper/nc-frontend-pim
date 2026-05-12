@@ -57,6 +57,15 @@ export function brDateToEndOfDayIso(value: string): string | null {
   return `${yyyy}-${mo}-${dd}T23:59:59${sign}${hh}:${mm}`;
 }
 
+export function isBrDateInThePast(value: string): boolean {
+  if (!isValidBrDate(value)) return false;
+  const [day, month, year] = value.split('/').map(Number);
+  const inputDate = new Date(year, month - 1, day);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return inputDate < today;
+}
+
 export function isoToBrDateInput(value?: string | null): string {
   if (!value) return '';
 
